@@ -1,0 +1,303 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		45A917BB36AD41FA93CA5114 /* SaltedFishAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548B6B3016C945A2853850AD /* SaltedFishAppApp.swift */; };
+		9DA265BDC6D941BFA9FA06FB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF94D91A93214EC3A6F9715A /* ContentView.swift */; };
+		9AAF7A601DB44E548776181A /* GameConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 613C1B9CB5974D0F87FEC739 /* GameConfig.swift */; };
+		F64C3569B10A459693503CD6 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82654AC305D54A1B95B0670C /* GameScene.swift */; };
+		BF5071AE72E94CBC865E6305 /* GameScene+Update.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2A626E8BF354ED2B942326F /* GameScene+Update.swift */; };
+		2B8E6BEE984746048A1664BD /* GameScene+Touch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFE788E85864C88850B8F8A /* GameScene+Touch.swift */; };
+		59C2523525BA4C55A3B0F9F8 /* GameScene+Render.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB387D0FE8D7499AA4173E6E /* GameScene+Render.swift */; };
+		DEB8BBDF4D6E4ACABB0419D6 /* GameScene+RenderUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87B666C75674835ADAE7F5A /* GameScene+RenderUI.swift */; };
+		7BB50B87058C4E3EB7EA93CD /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C79F0BBDF4445DBF33667B /* AudioManager.swift */; };
+		68C16F7A34134C2ABF75B2B5 /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98189A5DD0294D4C8B75352C /* CalculatorView.swift */; };
+		1BFAA91235B84499AD5F4DA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C3C43FCDFEC4B07A805698A /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		548B6B3016C945A2853850AD /* SaltedFishAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaltedFishAppApp.swift; sourceTree = "<group>"; };
+		EF94D91A93214EC3A6F9715A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		613C1B9CB5974D0F87FEC739 /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
+		82654AC305D54A1B95B0670C /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		A2A626E8BF354ED2B942326F /* GameScene+Update.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene+Update.swift; sourceTree = "<group>"; };
+		6EFE788E85864C88850B8F8A /* GameScene+Touch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene+Touch.swift; sourceTree = "<group>"; };
+		BB387D0FE8D7499AA4173E6E /* GameScene+Render.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene+Render.swift; sourceTree = "<group>"; };
+		D87B666C75674835ADAE7F5A /* GameScene+RenderUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene+RenderUI.swift; sourceTree = "<group>"; };
+		D7C79F0BBDF4445DBF33667B /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		98189A5DD0294D4C8B75352C /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
+		4C3C43FCDFEC4B07A805698A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		08C536E9828142EE8C2BEBB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB49F34D5B6A4CC19C02FB92 /* SaltedFishApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SaltedFishApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		47D74E2A79414F449C569BCF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DC1A00766C1547C6AF9BD738 = {
+			isa = PBXGroup;
+			children = (
+				84F8996E76DC48FE8E02C3CC /* SaltedFishApp */,
+				29EB0CEA9D264E019C35DE44 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		29EB0CEA9D264E019C35DE44 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BB49F34D5B6A4CC19C02FB92 /* SaltedFishApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		84F8996E76DC48FE8E02C3CC /* SaltedFishApp */ = {
+			isa = PBXGroup;
+			children = (
+				548B6B3016C945A2853850AD /* SaltedFishAppApp.swift */,
+				EF94D91A93214EC3A6F9715A /* ContentView.swift */,
+				ADD6AB0D413140569D750E99 /* Game */,
+				4C3C43FCDFEC4B07A805698A /* Assets.xcassets */,
+				08C536E9828142EE8C2BEBB4 /* Info.plist */,
+			);
+			path = SaltedFishApp;
+			sourceTree = "<group>";
+		};
+		ADD6AB0D413140569D750E99 /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				613C1B9CB5974D0F87FEC739 /* GameConfig.swift */,
+				82654AC305D54A1B95B0670C /* GameScene.swift */,
+				A2A626E8BF354ED2B942326F /* GameScene+Update.swift */,
+				6EFE788E85864C88850B8F8A /* GameScene+Touch.swift */,
+				BB387D0FE8D7499AA4173E6E /* GameScene+Render.swift */,
+				D87B666C75674835ADAE7F5A /* GameScene+RenderUI.swift */,
+				D7C79F0BBDF4445DBF33667B /* AudioManager.swift */,
+				98189A5DD0294D4C8B75352C /* CalculatorView.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F9F0F57823CC465192FEECA5 /* SaltedFishApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7DD6FB638E814F1A870AFD2A /* Build configuration list for PBXNativeTarget "SaltedFishApp" */;
+			buildPhases = (
+				F13438628CA54C44901CF8B5 /* Sources */,
+				47D74E2A79414F449C569BCF /* Frameworks */,
+				8656CB797876441BB5C17D90 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SaltedFishApp;
+			productName = SaltedFishApp;
+			productReference = BB49F34D5B6A4CC19C02FB92 /* SaltedFishApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DC83023EE1554372A02A4924 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "SaltedFishApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = DC1A00766C1547C6AF9BD738;
+			productRefGroup = 29EB0CEA9D264E019C35DE44 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F9F0F57823CC465192FEECA5 /* SaltedFishApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8656CB797876441BB5C17D90 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1BFAA91235B84499AD5F4DA4 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F13438628CA54C44901CF8B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45A917BB36AD41FA93CA5114 /* SaltedFishAppApp.swift in Sources */,
+				9DA265BDC6D941BFA9FA06FB /* ContentView.swift in Sources */,
+				9AAF7A601DB44E548776181A /* GameConfig.swift in Sources */,
+				F64C3569B10A459693503CD6 /* GameScene.swift in Sources */,
+				BF5071AE72E94CBC865E6305 /* GameScene+Update.swift in Sources */,
+				2B8E6BEE984746048A1664BD /* GameScene+Touch.swift in Sources */,
+				59C2523525BA4C55A3B0F9F8 /* GameScene+Render.swift in Sources */,
+				DEB8BBDF4D6E4ACABB0419D6 /* GameScene+RenderUI.swift in Sources */,
+				7BB50B87058C4E3EB7EA93CD /* AudioManager.swift in Sources */,
+				68C16F7A34134C2ABF75B2B5 /* CalculatorView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5CD34C5B0B0A408B95BAD3A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		66D26A3F61724AD3B0F77885 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		650F56AD11EE40B78EDD8B43 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SaltedFishApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "鱼来运转";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.saltedfish.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		302F13F38AAF4005A2062405 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SaltedFishApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "鱼来运转";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.saltedfish.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "SaltedFishApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5CD34C5B0B0A408B95BAD3A9 /* Debug */,
+				66D26A3F61724AD3B0F77885 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7DD6FB638E814F1A870AFD2A /* Build configuration list for PBXNativeTarget "SaltedFishApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				650F56AD11EE40B78EDD8B43 /* Debug */,
+				302F13F38AAF4005A2062405 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DC83023EE1554372A02A4924 /* Project object */;
+}
