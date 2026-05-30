@@ -80,13 +80,30 @@ class GameScene: SKScene {
     // Last update time
     var lastUpdateTime: TimeInterval = 0
 
+    // MARK: - Persistent Render Sprite (reused every frame to avoid GPU texture churn)
+    var renderSprite: SKSpriteNode?
+
     // MARK: - Scene Lifecycle
     override func didMove(to view: SKView) {
         backgroundColor = GameConfig.bgDark
         GamePersistence.shared.checkDaily()
         initBubbles()
-        gameTime = CACurrentMediaTime()
-        lastOnPlatformTime = gameTime
+        gameTime = 0
+        lastOnPlatformTime = 0
+
+        // Authenticate Game Center player silently on startup
+        GameCenterManager.shared.authenticateLocalPlayer()
+
+        // Pre-create the render sprite so it lives for the lifetime of the scene
+        let sprite = SKSpriteNode()
+        sprite.name = "renderSprite"
+        sprite.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        sprite.zPosition = 0
+        addChild(sprite)
+        renderSprite = sprite
+
+        // Hint SpriteKit to run at 60fps cap (30fps on simulator is enough but let's keep it smooth)
+        view.preferredFramesPerSecond = 60
     }
 
     // MARK: - Platform Generation
@@ -142,8 +159,8 @@ class GameScene: SKScene {
         bubbles = []
         for _ in 0..<15 {
             bubbles.append(Bubble(
-                x: CGFloat.random(in: 0...2000),
-                y: CGFloat.random(in: 0...800),
+                x: cameraXOffset + CGFloat.random(in: 0...size.width),
+                y: CGFloat.random(in: 0...size.height),
                 r: 2 + CGFloat.random(in: 0...4),
                 speed: 0.3 + CGFloat.random(in: 0...0.5),
                 offset: CGFloat.random(in: 0...(CGFloat.pi * 2))
@@ -168,7 +185,7 @@ class GameScene: SKScene {
         generateMorePlatforms(count: 25)
 
         let p0 = platforms[0]
-        fishX = p0.x; fishY = p0.y - GameConfig.fishHeight / 2
+        fishX = p0.x; fishY = p0.y - GameConfig.platformHeight / 2 - GameConfig.fishHeight / 2
         fishVX = 0; fishVY = 0; fishRotation = 0
         fishSquishX = 1; fishSquishY = 1
         fishWobbleAmp = 0; fishWobbleTime = 0
@@ -176,15 +193,16 @@ class GameScene: SKScene {
         targetCameraX = cameraXOffset
 
         gameStateVal = .playing
-        gameTime = CACurrentMediaTime()
-        lastOnPlatformTime = gameTime
+        gameTime = 0
+        lastUpdateTime = 0  // Reset so first frame dt is clean
+        lastOnPlatformTime = 0
         inputBufferTime = 0
         timeScale = 1.0
 
         activeDanmaku = []
         danmakuSpawnTimer = 0
 
-        showLevelUpPopup(text: "按住屏幕蓄力 · 拖动瞄准 · 松手跳跃", color: GameConfig.neonGreen)
+        showLevelUpPopup(text: Localized.string(zh: "按住屏幕蓄力 · 拖动瞄准 · 松手跳跃", en: "Hold to charge · Drag to aim · Release to jump", ja: "画面長押しでチャージ ・ ドラッグで照準 ・ 指を離してジャンプ"), color: GameConfig.neonGreen)
     }
 
     func triggerGameOver() {
@@ -193,6 +211,13 @@ class GameScene: SKScene {
         AudioManager.shared.playSound(.gameover)
         AudioManager.shared.vibrate(.error)
         currentDeathQuote = GameTexts.deathQuotes.randomElement() ?? ""
+
+        // Submit local score
+        let lvConfig = gameLevels[min(level - 1, gameLevels.count - 1)]
+        GamePersistence.shared.submitLocalScore(score, playerTitle: lvConfig.desc)
+        
+        // Submit Game Center score
+        GameCenterManager.shared.submitScore(score)
 
         if score > GamePersistence.shared.highScore {
             GamePersistence.shared.highScore = score
@@ -209,7 +234,7 @@ class GameScene: SKScene {
         if newLevel > level {
             level = newLevel
             let lvConfig = gameLevels[min(level - 1, gameLevels.count - 1)]
-            showLevelUpPopup(text: "进化！\(lvConfig.desc)", color: lvConfig.color)
+            showLevelUpPopup(text: Localized.string(zh: "进化！\(lvConfig.desc)", en: "Evolved! \(lvConfig.desc)", ja: "進化！\(lvConfig.desc)"), color: lvConfig.color)
             AudioManager.shared.playSound(.perfect)
             AudioManager.shared.vibrate(.success)
 
@@ -248,6 +273,16 @@ class GameScene: SKScene {
 
     // MARK: - Particle Effects
     func spawnLandingParticles(x: CGFloat, y: CGFloat, color: UIColor, count: Int = 12) {
+        let maxParticles = 50
+        // Trim oldest particles if near cap
+        if particles.count + count > maxParticles {
+            let excess = (particles.count + count) - maxParticles
+            if excess < particles.count {
+                particles.removeFirst(excess)
+            } else {
+                particles.removeAll()
+            }
+        }
         for _ in 0..<count {
             let angle = CGFloat.random(in: 0...(CGFloat.pi * 2))
             let speed = CGFloat.random(in: 1...4)

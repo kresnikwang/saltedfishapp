@@ -75,7 +75,7 @@ extension GameScene {
         }
         // Rank button
         if x >= startX + btnW + gap && x <= startX + btnW * 2 + gap && y >= startY && y <= startY + btnH {
-            // Show leaderboard placeholder
+            showLeaderboard()
             return
         }
         // Mute button
@@ -88,17 +88,18 @@ extension GameScene {
 
     private func handlePlayingTouch(x: CGFloat, y: CGFloat) {
         let hudBtnSize: CGFloat = min(size.width * 0.12, 42)
+        let safeTop: CGFloat = 50
 
         // Calculator button (top right)
         if x >= size.width - hudBtnSize - 16 && x <= size.width - 16 &&
-           y >= 0 && y <= hudBtnSize {
+           y >= safeTop && y <= safeTop + hudBtnSize {
             gameManager?.showCalculator = true
             return
         }
 
         // Mute button (next to calculator)
         if x >= size.width - hudBtnSize * 2 - 24 && x <= size.width - hudBtnSize - 24 &&
-           y >= 0 && y <= hudBtnSize {
+           y >= safeTop && y <= safeTop + hudBtnSize {
             AudioManager.shared.toggleMute()
             return
         }
@@ -127,16 +128,20 @@ extension GameScene {
             startGame()
             return
         }
-        // Submit (placeholder)
+        // Submit
         if x >= startX + btnW + gapX && x <= startX + btnW * 2 + gapX &&
            y >= startY && y <= startY + btnH {
-            // Submit score - placeholder
+            if !GameCenterManager.shared.isEnabled {
+                GameCenterManager.shared.authenticateLocalPlayer()
+            } else {
+                GameCenterManager.shared.submitScore(score)
+            }
             return
         }
         // Leaderboard
         if x >= startX && x <= startX + btnW &&
            y >= startY + btnH + gapY && y <= startY + btnH * 2 + gapY {
-            gameStateVal = .leaderboard
+            showLeaderboard()
             return
         }
         // Share
@@ -148,11 +153,22 @@ extension GameScene {
     }
 
     func shareScore() {
-        let text = "我在「鱼来运转」中获得了 \(score) 分！\(gameLevels[min(level-1, gameLevels.count-1)].desc)"
+        let text = Localized.string(
+            zh: "我在「鱼来运转」中获得了 \(score) 分！\(gameLevels[min(level-1, gameLevels.count-1)].desc)",
+            en: "I scored \(score) points in Slacker Fish! Level: \(gameLevels[min(level-1, gameLevels.count-1)].desc)"
+        )
         let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = windowScene.windows.first?.rootViewController {
             rootVC.present(activityVC, animated: true)
+        }
+    }
+ 
+    func showLeaderboard() {
+        if GameCenterManager.shared.isEnabled {
+            GameCenterManager.shared.showLeaderboard()
+        } else {
+            gameStateVal = .leaderboard
         }
     }
 }

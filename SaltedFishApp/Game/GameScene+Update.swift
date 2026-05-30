@@ -8,16 +8,16 @@ extension GameScene {
         let rawDt = currentTime - lastUpdateTime
         lastUpdateTime = currentTime
         let dt = min(rawDt, 1.0 / 30.0)
-        gameTime = currentTime
 
         // Time scale for slow-motion
         let effectiveDt = dt * Double(timeScale)
+        gameTime += effectiveDt
 
         switch gameStateVal {
         case .start:
             updateBubbles(dt: dt)
         case .playing, .charging:
-            updateCharging(dt: effectiveDt)
+            updateCharging(dt: dt) // Pass raw dt to maintain 1.2s charge speed!
             updateFishIdle(dt: effectiveDt)
             updateDanmaku(dt: dt)
             updateBubbles(dt: dt)
@@ -50,16 +50,32 @@ extension GameScene {
         }
 
         // Render via custom draw
-        setNeedsDisplay()
+        renderFrame()
     }
 
-    private func setNeedsDisplay() {
-        // Remove old render node and re-draw
-        childNode(withName: "renderNode")?.removeFromParent()
-        let renderNode = SKNode()
-        renderNode.name = "renderNode"
-        addChild(renderNode)
-        drawGame(in: renderNode)
+    private func renderFrame() {
+        guard let sprite = renderSprite else { return }
+        // Use scale 1.0 for perf — looks crisp enough on simulator/device at 1x
+        // Change to 2.0 for Retina quality at moderate cost, or UIScreen.main.scale for max
+        let renderScale: CGFloat = 1.0
+        let renderSize = size
+
+        UIGraphicsBeginImageContextWithOptions(renderSize, true, renderScale)
+        guard let ctx = UIGraphicsGetCurrentContext() else {
+            UIGraphicsEndImageContext()
+            return
+        }
+
+        drawGame(ctx: ctx)
+
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+
+        if let image = image, let cgImage = image.cgImage {
+            // SKTexture(cgImage:) reuses existing GPU memory allocation when size matches
+            sprite.texture = SKTexture(cgImage: cgImage)
+            sprite.size = renderSize
+        }
     }
 
     // MARK: - Charging Update
@@ -95,6 +111,7 @@ extension GameScene {
         if pointerY > size.height * (1 - GameConfig.cancelZoneRatio) {
             gameStateVal = .playing
             chargePower = 0
+            isCharging = false
             fishSquishX = 1; fishSquishY = 1
             timeScale = 1.0
             return
@@ -109,11 +126,21 @@ extension GameScene {
         fishVY = sin(chargeAngle) * power
         fishSquishX = 1; fishSquishY = 1
         chargePower = 0
+        isCharging = false
         timeScale = 1.0
 
         gameStateVal = .jumping
         AudioManager.shared.playSound(.jump)
         AudioManager.shared.vibrate(.light)
+
+        // Directional kickback screen shake (Task 5)
+        let kickbackScale: CGFloat = min(power * 0.4, 10.0)
+        screenShakeX = -cos(chargeAngle) * kickbackScale
+        screenShakeY = -sin(chargeAngle) * kickbackScale
+
+        // Set launch stretch wobble
+        fishWobbleAmp = (power / (GameConfig.maxPower * bonusMult)) * 0.45
+        fishWobbleTime = CGFloat.pi / 2
     }
 
     // MARK: - Jumping Update
@@ -144,10 +171,10 @@ extension GameScene {
 
     func checkPlatformCollision() {
         let startIdx = max(0, currentPlatformIdx - 5)
-        let endIdx = min(platforms.count, currentPlatformIdx + 15)
+        let endIdx = min(platforms.count, currentPlatformIdx + 40)
 
         for i in startIdx..<endIdx {
-            var p = platforms[i]
+            let p = platforms[i]
 
             // Client platform bobbing
             var platY = p.y
@@ -172,71 +199,86 @@ extension GameScene {
                fishBottom >= platTop && fishBottom <= platTop + fishVY + 10 &&
                fishRight > platLeft && fishLeft < platRight {
 
+                if p.type == .spring {
+                    handleSpringLanding(index: i, platTop: platTop)
+                    return
+                }
+
                 // Landed!
+                let preImpactVy = fishVY
                 fishY = platTop - GameConfig.fishHeight / 2
                 fishVY = 0
                 fishVX = 0
                 fishRotation = 0
                 lastOnPlatformTime = gameTime
 
-                // Landing effects
                 let landColor = p.type.color
-                spawnLandingParticles(x: fishX, y: platTop, color: landColor)
+                let isPerfect = p.type != .boss && abs(fishX - p.x) < p.w * GameConfig.perfectLandingZone
+                
+                let landingShake = min(max(isPerfect ? 8.0 : 5.0, preImpactVy * 0.6), 15.0)
+                screenShakeY = landingShake
+                screenShakeX = CGFloat.random(in: -0.5...0.5) * (landingShake * 0.3)
+                
+                spawnLandingParticles(x: fishX, y: platTop, color: isPerfect ? GameConfig.perfectGold : landColor, count: isPerfect ? 24 : 12)
                 spawnRipple(x: fishX, y: platTop)
-                applyScreenShake(intensity: 3)
-                AudioManager.shared.playSound(.land)
-                AudioManager.shared.vibrate(.medium)
+                AudioManager.shared.vibrate(isPerfect ? .success : .medium)
 
                 // Wobble animation
-                fishWobbleAmp = 0.15
-                fishWobbleTime = 0
+                fishWobbleAmp = 0.25
+                fishWobbleTime = CGFloat.pi / 2
 
                 // Score calculation
                 if i > furthestPlatformIdx {
                     let skipped = i - furthestPlatformIdx
-                    combo += 1
-                    let comboMult = 1.0 + CGFloat(combo) * GameConfig.comboMultiplierStep
-                    var basePoints = CGFloat(GameConfig.baseScore * skipped)
-
-                    // Perfect landing
-                    let centerDist = abs(fishX - p.x) / (p.w / 2)
-                    var isPerfect = centerDist < GameConfig.perfectLandingZone
                     if isPerfect {
-                        basePoints *= GameConfig.perfectMultiplier
-                        AudioManager.shared.playSound(.perfect)
-                        AudioManager.shared.vibrate(.success)
-                        spawnLandingParticles(x: fishX, y: platTop, color: GameConfig.perfectGold, count: 20)
-                        showScorePopup(x: fishX - cameraXOffset, y: platTop - 30, text: "PERFECT!", color: GameConfig.perfectGold)
+                        combo += skipped + 1
+                    } else {
+                        combo += skipped
                     }
 
-                    // Platform type bonus
-                    var platMult: CGFloat = 1.0
-                    if p.type == .tea { platMult = 1.5 }
-
-                    // Streak bonus
-                    let streakMult = 1.0 + GamePersistence.shared.streakBonus
-
-                    let totalScore = Int(basePoints * comboMult * platMult * streakMult)
-                    score += totalScore
-
-                    if combo > 1 {
-                        AudioManager.shared.playSound(.combo)
-                        showScorePopup(x: fishX - cameraXOffset, y: platTop - 50, text: "COMBO x\(combo)", color: GameConfig.goldColor)
-                    }
-
-                    showScorePopup(x: fishX - cameraXOffset, y: platTop - 15, text: "+\(totalScore)", color: landColor)
-
-                    // Boss penalty
                     if p.type == .boss {
+                        // Boss platform: ONLY deduct, matching WeChat behaviour
                         score = max(0, score - 200)
                         AudioManager.shared.playSound(.hit)
                         AudioManager.shared.vibrate(.heavy)
                         showScorePopup(x: fishX - cameraXOffset, y: platTop - 15, text: "-200", color: GameConfig.errorRed)
+                    } else {
+                        let comboMult = 1.0 + CGFloat(combo) * GameConfig.comboMultiplierStep
+                        var basePoints = CGFloat(GameConfig.baseScore * skipped)
+
+                        // Perfect landing
+                        if isPerfect {
+                            basePoints *= GameConfig.perfectMultiplier
+                            showScorePopup(x: fishX - cameraXOffset, y: platTop - 38, text: "PERFECT!", color: GameConfig.perfectGold)
+                        }
+
+                        // Platform type bonus
+                        var platMult: CGFloat = 1.0
+                        if p.type == .tea { platMult = 1.5 }
+
+                        // Streak bonus
+                        let streakMult = 1.0 + GamePersistence.shared.streakBonus
+
+                        let totalScore = Int(basePoints * comboMult * platMult * streakMult)
+                        score += totalScore
+
+                        if combo > 1 {
+                            AudioManager.shared.playSound(isPerfect ? .perfect : .combo)
+                            showScorePopup(x: fishX - cameraXOffset, y: platTop - 55, text: "COMBO x\(combo)", color: GameConfig.goldColor)
+                        } else if isPerfect {
+                            AudioManager.shared.playSound(.perfect)
+                        } else {
+                            AudioManager.shared.playSound(.land)
+                        }
+
+                        showScorePopup(x: fishX - cameraXOffset, y: platTop - 15, text: "+\(totalScore)", color: landColor)
                     }
 
                     furthestPlatformIdx = i
                     updateLevel()
                 } else {
+                    // Backward / same platform: just land sound, reset combo
+                    AudioManager.shared.playSound(p.type == .boss ? .hit : .land)
                     combo = 0
                 }
 
@@ -263,25 +305,125 @@ extension GameScene {
         }
     }
 
+    func handleSpringLanding(index: Int, platTop: CGFloat) {
+        let p = platforms[index]
+        platforms[index].launchTimer = gameTime
+        
+        let isForward = index > furthestPlatformIdx
+        let isPerfect = abs(fishX - p.x) < p.w * GameConfig.perfectLandingZone
+        
+        // Combo update
+        let skipped = index - furthestPlatformIdx
+        if isForward {
+            if isPerfect {
+                combo += skipped + 1
+            } else {
+                combo += skipped
+            }
+            
+            // Score calculation
+            let comboMult = 1.0 + CGFloat(combo) * GameConfig.comboMultiplierStep
+            let streakMult = 1.0 + GamePersistence.shared.streakBonus
+            var basePoints = CGFloat(GameConfig.baseScore * skipped)
+            if isPerfect {
+                basePoints *= GameConfig.perfectMultiplier
+            }
+            let totalScore = Int(basePoints * comboMult * streakMult)
+            score += totalScore
+            
+            furthestPlatformIdx = index
+            updateLevel()
+            
+            // Popups
+            if isPerfect {
+                showScorePopup(x: fishX - cameraXOffset, y: platTop - 15, text: "+\(totalScore)", color: GameConfig.perfectGold)
+                showScorePopup(x: fishX - cameraXOffset, y: platTop - 30, text: "PERFECT!", color: GameConfig.perfectGold)
+                AudioManager.shared.playSound(.perfect)
+                AudioManager.shared.vibrate(.success)
+            } else {
+                showScorePopup(x: fishX - cameraXOffset, y: platTop - 15, text: "+\(totalScore)", color: p.type.color)
+                if combo > 1 {
+                    showScorePopup(x: fishX - cameraXOffset, y: platTop - 35, text: "COMBO x\(combo)", color: GameConfig.goldColor)
+                }
+                AudioManager.shared.playSound(.land)
+                AudioManager.shared.vibrate(.medium)
+            }
+        } else {
+            combo = 0
+            AudioManager.shared.playSound(.land)
+        }
+        
+        currentPlatformIdx = index
+        
+        // Auto-launch velocity calculation
+        let launchAngle: CGFloat = -CGFloat.pi / 3.2
+        let tanA = tan(launchAngle)
+        
+        if index + 1 < platforms.count {
+            let nextP = platforms[index + 1]
+            var nextPlatY = nextP.y
+            if nextP.type == .client {
+                nextPlatY = nextP.y + sin(gameTime * 2.0 + Double(nextP.bobOffset)) * 20.0
+            }
+            let targetX = nextP.x
+            let targetY = nextPlatY - GameConfig.platformHeight / 2 - GameConfig.fishHeight / 2
+            
+            let dx = targetX - fishX
+            let dy = targetY - fishY
+            
+            if dx > 10 {
+                let denom = dy - dx * tanA
+                if denom > 0 {
+                    var vx = dx * sqrt((0.5 * GameConfig.gravity) / denom)
+                    var vy = vx * tanA
+                    
+                    let speed = sqrt(vx * vx + vy * vy)
+                    if speed > 25 {
+                        let scale = 25 / speed
+                        vx *= scale
+                        vy *= scale
+                    }
+                    fishVX = vx
+                    fishVY = vy
+                } else {
+                    let power: CGFloat = 13.5
+                    fishVX = cos(launchAngle) * power
+                    fishVY = sin(launchAngle) * power
+                }
+            } else {
+                let power: CGFloat = 13.5
+                fishVX = cos(launchAngle) * power
+                fishVY = sin(launchAngle) * power
+            }
+        } else {
+            let power: CGFloat = 13.5
+            fishVX = cos(launchAngle) * power
+            fishVY = sin(launchAngle) * power
+        }
+        
+        gameStateVal = .jumping
+        
+        // Play jump sound
+        AudioManager.shared.playSound(.jump)
+        
+        // Wobble & Screen Shake
+        fishWobbleAmp = 0.4
+        fishWobbleTime = CGFloat.pi / 2
+        
+        let shakeY = isPerfect ? CGFloat(9) : CGFloat(6)
+        screenShakeY = shakeY
+        screenShakeX = CGFloat.random(in: -0.5...0.5) * shakeY * 0.3
+        
+        // Particles and Ripple
+        let landColor = isPerfect ? GameConfig.perfectGold : p.type.color
+        spawnLandingParticles(x: fishX, y: platTop, color: landColor, count: isPerfect ? 24 : 12)
+        spawnRipple(x: fishX, y: platTop)
+    }
+
     func handlePlatformEffect(index: Int, platY: CGFloat) {
         let p = platforms[index]
 
         switch p.type {
-        case .spring:
-            // Auto-launch to next platform
-            if index + 1 < platforms.count {
-                let next = platforms[index + 1]
-                let dx = next.x - fishX
-                let dy = next.y - fishY
-                let angle: CGFloat = -CGFloat.pi * 0.3125  // -56.25 degrees
-                let t = dx / (cos(angle) * GameConfig.maxPower * 0.8)
-                fishVX = dx / max(t, 1)
-                fishVY = (dy - 0.5 * GameConfig.gravity * t * t) / max(t, 1)
-                gameStateVal = .jumping
-                AudioManager.shared.playSound(.jump)
-                AudioManager.shared.vibrate(.heavy)
-                platforms[index].launchTimer = gameTime
-            }
         case .vanish:
             platforms[index].vanishTimer = gameTime
         case .slide:
@@ -293,85 +435,153 @@ extension GameScene {
     }
 
     func checkObstacleCollision() {
-        let fishLeft = fishX - GameConfig.fishWidth / 2
-        let fishRight = fishX + GameConfig.fishWidth / 2
-        let fishTop = fishY - GameConfig.fishHeight / 2
-        let fishBottom = fishY + GameConfig.fishHeight / 2
-
-        for obs in obstacles {
-            let obsBounds: CGRect
-            switch obs.type {
-            case .seaweed:
-                obsBounds = CGRect(x: obs.x - 8, y: obs.y - 20, width: 16, height: 40)
-            case .crab:
-                obsBounds = CGRect(x: obs.x - 12, y: obs.y - 8, width: 24, height: 16)
-            case .doc:
-                let docX = obs.startX + sin(gameTime * 1.5 + Double(obs.bobOffset)) * 30
-                obsBounds = CGRect(x: docX - 10, y: obs.y - 14, width: 20, height: 28)
-            case .boss:
-                obsBounds = CGRect(x: obs.x - 15, y: obs.y - 15, width: 30, height: 30)
+        let fw = GameConfig.fishWidth
+        
+        for index in 0..<obstacles.count {
+            let obs = obstacles[index]
+            // Skip hit/destroyed obstacles
+            guard obs.y > -9000 else { continue }
+            
+            let bobY = sin(gameTime * 3.0 + Double(obs.bobOffset)) * 6.0
+            var ox = obs.x
+            if obs.type == .doc {
+                ox = obs.startX + sin(gameTime * 1.5 + Double(obs.bobOffset)) * 30.0
             }
-
-            if fishRight > obsBounds.minX && fishLeft < obsBounds.maxX &&
-               fishBottom > obsBounds.minY && fishTop < obsBounds.maxY {
-                // Hit obstacle
+            let oy = obs.y + bobY
+            
+            var hit = false
+            if obs.type == .boss {
+                // Boss scan beam moving horizontally (gameTime * 1.5 matches gameTime * 0.0015 in WeChat)
+                let scanX = ox + sin(gameTime * 1.5 + Double(obs.bobOffset)) * 30.0
+                let scannerWidth: CGFloat = 20.0
+                if abs(fishX - scanX) < (scannerWidth / 2.0 + fw / 2.0) && fishY > oy {
+                    hit = true
+                }
+            } else {
+                // Circle-based collision (radius 22)
+                let dx = fishX - ox
+                let dy = fishY - oy
+                let dist = sqrt(dx * dx + dy * dy)
+                if dist < 22.0 {
+                    hit = true
+                }
+            }
+            
+            if hit {
+                // Rebound physics matching WeChat
+                fishVY += 3.0
+                fishVX *= 0.5
+                if obs.type == .boss {
+                    fishVX = -1.0
+                    fishVY += 2.0
+                }
+                
                 AudioManager.shared.playSound(.hit)
                 AudioManager.shared.vibrate(.heavy)
-                applyScreenShake(intensity: 8)
-                spawnLandingParticles(x: fishX, y: fishY, color: .red, count: 8)
-
-                score = max(0, score - 50)
-                showScorePopup(x: fishX - cameraXOffset, y: fishY - 20, text: "-50", color: GameConfig.errorRed)
-
-                // Deflect fish slightly
-                fishVY = min(fishVY, -2)
+                
+                screenShakeX = CGFloat.random(in: -7.5...7.5)
+                screenShakeY = CGFloat.random(in: -7.5...7.5)
+                
+                spawnLandingParticles(x: fishX, y: fishY, color: GameConfig.errorRed, count: 8)
+                
+                // Mark obstacle as hit/destroyed
+                obstacles[index].y = -9999.0
                 break
             }
         }
     }
 
     func checkDragonGateCollision() {
-        guard var gate = dragonGate, !gate.passed else { return }
+        guard let gate = dragonGate, !gate.passed else { return }
         if fishX > gate.x - gate.w / 2 && fishX < gate.x + gate.w / 2 {
             dragonGate?.passed = true
             spawnLandingParticles(x: gate.x, y: gate.y, color: GameConfig.perfectGold, count: 30)
-            applyScreenShake(intensity: 10)
+            screenShakeX = CGFloat.random(in: -6...6)
+            screenShakeY = -8
             AudioManager.shared.playSound(.perfect)
             AudioManager.shared.vibrate(.success)
-            showLevelUpPopup(text: "鱼跃龙门！", color: GameConfig.perfectGold)
+            showLevelUpPopup(text: Localized.string(zh: "鱼跃龙门！", en: "Leaped the Dragon Gate!"), color: GameConfig.perfectGold)
         }
     }
 
-    // MARK: - Fish Idle
+    // MARK: - Fish Idle & Platform Sync
     func updateFishIdle(dt: Double) {
-        guard gameStateVal == .playing else { return }
+        guard gameStateVal == .playing || gameStateVal == .charging else { return }
         let dtFactor = CGFloat(dt) * 60.0
 
-        // Idle bob
-        let bob = sin(gameTime * 3) * 3
-        // Apply only visual offset, not to fishY directly
-
-        // Wobble decay
+        // Wobble decay (frame-rate independent)
         if fishWobbleAmp > 0.001 {
-            fishWobbleTime += CGFloat(dt) * 10
-            fishWobbleAmp *= 0.92
-            fishSquishX = 1.0 + sin(fishWobbleTime) * fishWobbleAmp
-            fishSquishY = 1.0 - sin(fishWobbleTime) * fishWobbleAmp * 0.8
+            fishWobbleTime += dtFactor * 0.5
+            fishWobbleAmp *= pow(0.88, dtFactor)
+            let wobbleVal = sin(fishWobbleTime) * fishWobbleAmp
+            fishSquishX = 1.0 + wobbleVal
+            fishSquishY = 1.0 - wobbleVal * 0.8
         } else {
             fishSquishX = 1; fishSquishY = 1
+            fishWobbleAmp = 0
         }
 
-        // Slide platform push
+        // Sync fish position to platform (with slide, vanish, coyote time, and bobbing support)
         if currentPlatformIdx < platforms.count {
-            let p = platforms[currentPlatformIdx]
-            if p.type == .slide {
-                fishX -= 0.5 * dtFactor
-                // Check if pushed off
-                let platLeft = p.x - p.w / 2
-                if fishX < platLeft - GameConfig.fishWidth / 2 {
-                    fishVY = 1
+            let cp = platforms[currentPlatformIdx]
+
+            // Check vanishing platform timer
+            if cp.type == .vanish && cp.vanishTimer > 0 {
+                let elapsed = gameTime - cp.vanishTimer
+                if elapsed > 1.0 {
+                    // Vanished!
                     gameStateVal = .jumping
+                    fishVY = 1.0 // start falling
+                    fishVX = 0
+                    if isCharging {
+                        isCharging = false
+                        AudioManager.shared.stopChargeSound()
+                        chargePower = 0
+                    }
+                    return
                 }
+            }
+
+            // Slide platform push
+            if cp.type == .slide {
+                fishX -= 0.8 * dtFactor
+            }
+
+            let platLeft = cp.x - cp.w / 2
+            let platRight = cp.x + cp.w / 2
+
+            // Check if slipped off the platform
+            if fishX < platLeft || fishX > platRight {
+                let coyoteTime: TimeInterval = 0.150 // 150ms
+                if gameTime - lastOnPlatformTime > coyoteTime {
+                    gameStateVal = .jumping
+                    fishVY = 1.0 // start falling
+                    fishVX = cp.type == .slide ? -0.8 : 0
+                    if isCharging {
+                        isCharging = false
+                        AudioManager.shared.stopChargeSound()
+                        chargePower = 0
+                    }
+                } else {
+                    // Within coyote time: visual fall
+                    let coyoteElapsed = gameTime - lastOnPlatformTime
+                    let fallDist = CGFloat(coyoteElapsed / coyoteTime) * 15.0
+                    var bobY: CGFloat = 0
+                    if cp.type == .client {
+                        bobY = sin(gameTime * 2.0 + Double(cp.bobOffset)) * 20.0
+                    }
+                    let platTop = cp.y + bobY - GameConfig.platformHeight / 2
+                    fishY = platTop - GameConfig.fishHeight / 2 + fallDist
+                }
+            } else {
+                lastOnPlatformTime = gameTime
+                // Snap Y position, adjusting for client bob
+                var bobY: CGFloat = 0
+                if cp.type == .client {
+                    bobY = sin(gameTime * 2.0 + Double(cp.bobOffset)) * 20.0
+                }
+                let platTop = cp.y + bobY - GameConfig.platformHeight / 2
+                fishY = platTop - GameConfig.fishHeight / 2
             }
         }
     }
@@ -384,26 +594,31 @@ extension GameScene {
             lookAhead = cos(chargeAngle) * size.width * 0.25
         }
         targetCameraX = fishX - baseOffset + lookAhead
-        cameraXOffset += (targetCameraX - cameraXOffset) * GameConfig.cameraLerpFactor
+        cameraXOffset += (targetCameraX - cameraXOffset) * GameConfig.cameraLerpFactor * timeScale
     }
 
     // MARK: - Screen Shake
     func updateScreenShake(dt: Double) {
-        if screenShakeIntensity > 0.1 {
-            screenShakeX = CGFloat.random(in: -screenShakeIntensity...screenShakeIntensity)
-            screenShakeY = CGFloat.random(in: -screenShakeIntensity...screenShakeIntensity)
-            screenShakeIntensity *= 0.85
+        let dtFactor = CGFloat(dt) * 60.0
+        if abs(screenShakeX) > 0.1 {
+            screenShakeX *= pow(0.88, dtFactor)
         } else {
-            screenShakeX = 0; screenShakeY = 0; screenShakeIntensity = 0
+            screenShakeX = 0
+        }
+        if abs(screenShakeY) > 0.1 {
+            screenShakeY *= pow(0.88, dtFactor)
+        } else {
+            screenShakeY = 0
         }
     }
 
     // MARK: - Effects Updates
     func updateParticles(dt: Double) {
+        let dtFactor = CGFloat(dt) * 60.0
         for i in (0..<particles.count).reversed() {
-            particles[i].x += particles[i].vx
-            particles[i].y += particles[i].vy
-            particles[i].vy += 0.1 // gravity
+            particles[i].x += particles[i].vx * dtFactor
+            particles[i].y += particles[i].vy * dtFactor
+            particles[i].vy += 0.1 * dtFactor // gravity
             particles[i].life -= CGFloat(dt) * 2
             if particles[i].life <= 0 { particles.remove(at: i) }
         }
@@ -423,7 +638,8 @@ extension GameScene {
             bubbles[i].x += sin(gameTime * 2 + Double(bubbles[i].offset)) * 0.3
             if bubbles[i].y < -10 {
                 bubbles[i].y = size.height + 10
-                bubbles[i].x = CGFloat.random(in: 0...2000)
+                // Keep bubbles visible relative to camera (world X follows camera)
+                bubbles[i].x = cameraXOffset + CGFloat.random(in: 0...size.width)
             }
         }
     }
@@ -457,7 +673,7 @@ extension GameScene {
     }
 
     func updateDragonGate(dt: Double) {
-        guard var gate = dragonGate else { return }
+        guard let gate = dragonGate else { return }
         if gate.alpha < 1 {
             dragonGate?.alpha = min(1, gate.alpha + CGFloat(dt))
         }

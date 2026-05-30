@@ -1,5 +1,6 @@
 import AVFoundation
 import AudioToolbox
+import UIKit
 
 class AudioManager {
     static let shared = AudioManager()
@@ -27,9 +28,11 @@ class AudioManager {
     }
 
     private func setupEngine() {
-        audioEngine = AVAudioEngine()
+        let engine = AVAudioEngine()
+        audioEngine = engine
+        _ = engine.mainMixerNode // Force instantiation of output/mixer nodes to prevent crash
         do {
-            try audioEngine?.start()
+            try engine.start()
         } catch {
             print("Audio engine start failed: \(error)")
         }
@@ -96,16 +99,18 @@ class AudioManager {
             channelData[i] = sample * amplitude
         }
 
-        let playerNode = AVAudioPlayerNode()
-        engine.attach(playerNode)
-        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        DispatchQueue.main.async {
+            let playerNode = AVAudioPlayerNode()
+            engine.attach(playerNode)
+            engine.connect(playerNode, to: engine.mainMixerNode, format: format)
 
-        playerNode.scheduleBuffer(buffer) {
-            DispatchQueue.main.async {
-                engine.detach(playerNode)
+            playerNode.scheduleBuffer(buffer) {
+                DispatchQueue.main.async {
+                    engine.detach(playerNode)
+                }
             }
+            playerNode.play()
         }
-        playerNode.play()
     }
 
     // MARK: - Charge Sound
@@ -127,7 +132,6 @@ class AudioManager {
                 let t = Double(i) / sampleRate
                 let progress = t / duration
                 let freq = 200.0 + 600.0 * progress
-                let phase = 2.0 * Double.pi * freq * t
                 let sample = Float(2.0 * abs(2.0 * (t * freq - floor(t * freq + 0.5))) - 1.0)
                 let amp = Float(min(progress * 10.0, 1.0) * 0.1)
                 channelData[i] = sample * amp
