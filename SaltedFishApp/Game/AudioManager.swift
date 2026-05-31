@@ -179,7 +179,7 @@ class AudioManager {
 
 // MARK: - Sound Types
 enum SoundType {
-    case jump, land, combo, hit, gameover, perfect
+    case jump, land, combo, hit, gameover, perfect, tap
 
     struct Parameters {
         let waveform: Waveform
@@ -210,6 +210,9 @@ enum SoundType {
         case .perfect:
             return Parameters(waveform: .sine, startFreq: 600, endFreq: 1200,
                             startAmp: 0.12, endAmp: 0.01, duration: 0.25)
+        case .tap:
+            return Parameters(waveform: .sine, startFreq: 420, endFreq: 520,
+                            startAmp: 0.06, endAmp: 0.01, duration: 0.06)
         }
     }
 }

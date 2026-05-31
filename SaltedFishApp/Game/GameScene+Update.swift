@@ -16,6 +16,7 @@ extension GameScene {
         switch gameStateVal {
         case .start:
             updateBubbles(dt: dt)
+            updateButtonFeedback(dt: dt)
         case .playing, .charging:
             updateCharging(dt: dt) // Pass raw dt to maintain 1.2s charge speed!
             updateFishIdle(dt: effectiveDt)
@@ -29,6 +30,8 @@ extension GameScene {
             updateDragonGate(dt: dt)
             checkPlatformGeneration()
             updateFishQuip(dt: dt)
+            updateTutorial(dt: dt)
+            updateButtonFeedback(dt: dt)
         case .jumping:
             updateJumping(dt: effectiveDt)
             updateDanmaku(dt: dt)
@@ -40,13 +43,16 @@ extension GameScene {
             updateScreenShake(dt: dt)
             updateDragonGate(dt: dt)
             checkPlatformGeneration()
+            updateTutorial(dt: dt)
+            updateButtonFeedback(dt: dt)
         case .gameover:
             updateBubbles(dt: dt)
             updateParticles(dt: dt)
             updateRipples(dt: dt)
             updateScorePopups(dt: dt)
+            updateButtonFeedback(dt: dt)
         case .leaderboard:
-            break
+            updateButtonFeedback(dt: dt)
         }
 
         // Render via custom draw
@@ -59,22 +65,28 @@ extension GameScene {
         // Change to 2.0 for Retina quality at moderate cost, or UIScreen.main.scale for max
         let renderScale: CGFloat = 1.0
         let renderSize = size
-
-        UIGraphicsBeginImageContextWithOptions(renderSize, true, renderScale)
-        guard let ctx = UIGraphicsGetCurrentContext() else {
-            UIGraphicsEndImageContext()
-            return
+        if renderSize != lastRenderedSize {
+            sprite.position = CGPoint(x: renderSize.width / 2, y: renderSize.height / 2)
+            lastRenderedSize = renderSize
         }
 
-        drawGame(ctx: ctx)
-
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        if let image = image, let cgImage = image.cgImage {
-            // SKTexture(cgImage:) reuses existing GPU memory allocation when size matches
-            sprite.texture = SKTexture(cgImage: cgImage)
-            sprite.size = renderSize
+        autoreleasepool {
+            UIGraphicsBeginImageContextWithOptions(renderSize, true, renderScale)
+            guard let ctx = UIGraphicsGetCurrentContext() else {
+                UIGraphicsEndImageContext()
+                return
+            }
+            
+            drawGame(ctx: ctx)
+            
+            let image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            
+            if let image = image, let cgImage = image.cgImage {
+                // SKTexture(cgImage:) reuses existing GPU memory allocation when size matches
+                sprite.texture = SKTexture(cgImage: cgImage)
+                sprite.size = renderSize
+            }
         }
     }
 
@@ -83,22 +95,30 @@ extension GameScene {
         guard gameStateVal == .charging else { return }
         timeScale = GameConfig.slowMotionScale
 
-        chargePower = min(chargePower + GameConfig.chargeRate * CGFloat(dt) * 60, GameConfig.maxPower)
+        chargeProgress = min(chargeProgress + CGFloat(dt) / GameConfig.chargeFullDuration, 1.0)
+        chargePower = GameConfig.maxPower * pow(chargeProgress, GameConfig.chargeCurveExponent)
 
         // Squish effect
         let chargeRatio = chargePower / GameConfig.maxPower
         fishSquishX = 1.0 - chargeRatio * 0.3
         fishSquishY = 1.0 + chargeRatio * 0.2
+        
+        if chargeRatio >= GameConfig.chargeReadyThreshold && !chargeReadyFeedbackPlayed {
+            chargeReadyFeedbackPlayed = true
+            AudioManager.shared.vibrate(.light)
+        }
 
         // Angle from drag
         if pointerX > -900 {
             let dx = pointerX - chargeStartX
             let dy = pointerY - chargeStartY
             if abs(dx) > 5 || abs(dy) > 5 {
-                chargeAngle = atan2(dy, dx)
-                // Clamp to upward angles
-                if chargeAngle > 0 { chargeAngle = min(chargeAngle, CGFloat.pi * 0.1) }
-                chargeAngle = max(chargeAngle, -CGFloat.pi * 0.85)
+                var targetAngle = atan2(dy, dx)
+                if targetAngle > GameConfig.maxLaunchAngle {
+                    targetAngle = GameConfig.maxLaunchAngle
+                }
+                targetAngle = max(targetAngle, GameConfig.minLaunchAngle)
+                chargeAngle += (targetAngle - chargeAngle) * GameConfig.aimSmoothingFactor
             }
         }
     }
@@ -111,27 +131,33 @@ extension GameScene {
         if pointerY > size.height * (1 - GameConfig.cancelZoneRatio) {
             gameStateVal = .playing
             chargePower = 0
+            chargeProgress = 0
             isCharging = false
+            chargeReadyFeedbackPlayed = false
             fishSquishX = 1; fishSquishY = 1
             timeScale = 1.0
+            AudioManager.shared.vibrate(.light)
             return
         }
 
         // Apply jump bonus from level
         let lvConfig = gameLevels[min(level - 1, gameLevels.count - 1)]
         let bonusMult = 1.0 + lvConfig.jumpBonus
-        let power = chargePower * bonusMult
+        let power = max(chargePower, GameConfig.minLaunchPower) * bonusMult
 
         fishVX = cos(chargeAngle) * power
         fishVY = sin(chargeAngle) * power
         fishSquishX = 1; fishSquishY = 1
         chargePower = 0
+        chargeProgress = 0
         isCharging = false
+        chargeReadyFeedbackPlayed = false
         timeScale = 1.0
 
         gameStateVal = .jumping
+        advanceTutorial(to: 2)
         AudioManager.shared.playSound(.jump)
-        AudioManager.shared.vibrate(.light)
+        AudioManager.shared.vibrate(power > GameConfig.maxPower * 0.75 ? .medium : .light)
 
         // Directional kickback screen shake (Task 5)
         let kickbackScale: CGFloat = min(power * 0.4, 10.0)
@@ -194,10 +220,19 @@ extension GameScene {
             let platTop = platY - p.h / 2
             let platLeft = p.x - p.w / 2
             let platRight = p.x + p.w / 2
+            let strictHorizontalOverlap = fishRight > platLeft && fishLeft < platRight
+            let forgivingHorizontalOverlap = fishRight > platLeft - GameConfig.landingForgiveness &&
+                                             fishLeft < platRight + GameConfig.landingForgiveness
 
             if fishVY > 0 &&
-               fishBottom >= platTop && fishBottom <= platTop + fishVY + 10 &&
-               fishRight > platLeft && fishLeft < platRight {
+               fishBottom >= platTop &&
+               fishBottom <= platTop + max(fishVY, 0) + GameConfig.landingVerticalForgiveness &&
+               forgivingHorizontalOverlap {
+                
+                let wasEdgeSaved = !strictHorizontalOverlap
+                if wasEdgeSaved {
+                    fishX = min(max(fishX, platLeft), platRight)
+                }
 
                 if p.type == .spring {
                     handleSpringLanding(index: i, platTop: platTop)
@@ -250,6 +285,8 @@ extension GameScene {
                         if isPerfect {
                             basePoints *= GameConfig.perfectMultiplier
                             showScorePopup(x: fishX - cameraXOffset, y: platTop - 38, text: "PERFECT!", color: GameConfig.perfectGold)
+                        } else if wasEdgeSaved {
+                            showScorePopup(x: fishX - cameraXOffset, y: platTop - 38, text: Localized.string(zh: "擦边救回!", en: "EDGE SAVE!", ja: "ギリギリ!"), color: GameConfig.goldColor)
                         }
 
                         // Platform type bonus
@@ -283,6 +320,7 @@ extension GameScene {
                 }
 
                 currentPlatformIdx = i
+                finishTutorial()
 
                 // Special platform effects
                 handlePlatformEffect(index: i, platY: platY)
@@ -293,8 +331,11 @@ extension GameScene {
                 if inputBufferTime > 0 && gameTime - inputBufferTime < GameConfig.inputBufferWindow {
                     isCharging = true
                     chargePower = 0
+                    chargeProgress = 0
                     chargeStartX = bufferedPointerX
                     chargeStartY = bufferedPointerY
+                    chargeAngle = -.pi / 4
+                    chargeReadyFeedbackPlayed = false
                     gameStateVal = .charging
                     AudioManager.shared.startChargeSound()
                     inputBufferTime = 0
@@ -354,6 +395,7 @@ extension GameScene {
         }
         
         currentPlatformIdx = index
+        finishTutorial()
         
         // Auto-launch velocity calculation
         let launchAngle: CGFloat = -CGFloat.pi / 3.2
@@ -453,16 +495,16 @@ extension GameScene {
             if obs.type == .boss {
                 // Boss scan beam moving horizontally (gameTime * 1.5 matches gameTime * 0.0015 in WeChat)
                 let scanX = ox + sin(gameTime * 1.5 + Double(obs.bobOffset)) * 30.0
-                let scannerWidth: CGFloat = 20.0
+                let scannerWidth: CGFloat = 18.0
                 if abs(fishX - scanX) < (scannerWidth / 2.0 + fw / 2.0) && fishY > oy {
                     hit = true
                 }
             } else {
-                // Circle-based collision (radius 22)
+                // Circle-based collision with a slightly conservative radius for fair near misses.
                 let dx = fishX - ox
                 let dy = fishY - oy
                 let dist = sqrt(dx * dx + dy * dy)
-                if dist < 22.0 {
+                if dist < GameConfig.obstacleCollisionRadius {
                     hit = true
                 }
             }
@@ -537,6 +579,8 @@ extension GameScene {
                         isCharging = false
                         AudioManager.shared.stopChargeSound()
                         chargePower = 0
+                        chargeProgress = 0
+                        chargeReadyFeedbackPlayed = false
                     }
                     return
                 }
@@ -561,6 +605,8 @@ extension GameScene {
                         isCharging = false
                         AudioManager.shared.stopChargeSound()
                         chargePower = 0
+                        chargeProgress = 0
+                        chargeReadyFeedbackPlayed = false
                     }
                 } else {
                     // Within coyote time: visual fall
@@ -590,11 +636,21 @@ extension GameScene {
     func updateCamera(dt: Double) {
         let baseOffset = size.width * GameConfig.cameraBaseOffset
         var lookAhead: CGFloat = 0
-        if gameStateVal == .charging {
-            lookAhead = cos(chargeAngle) * size.width * 0.25
+        switch gameStateVal {
+        case .charging:
+            let chargeRatio = chargePower / GameConfig.maxPower
+            lookAhead = cos(chargeAngle) * size.width * (0.16 + GameConfig.cameraChargeLookAhead * chargeRatio)
+        case .jumping:
+            let velocityRatio = min(max(fishVX / GameConfig.maxPower, 0), 1)
+            lookAhead = size.width * GameConfig.cameraJumpLookAhead * velocityRatio
+        default:
+            break
         }
         targetCameraX = fishX - baseOffset + lookAhead
-        cameraXOffset += (targetCameraX - cameraXOffset) * GameConfig.cameraLerpFactor * timeScale
+        let diff = targetCameraX - cameraXOffset
+        let maxStep = size.width * 0.045
+        let step = diff * GameConfig.cameraLerpFactor
+        cameraXOffset += min(max(step, -maxStep), maxStep)
     }
 
     // MARK: - Screen Shake
@@ -646,7 +702,7 @@ extension GameScene {
 
     func updateDanmaku(dt: Double) {
         danmakuSpawnTimer += dt
-        if danmakuSpawnTimer > 3.0 {
+        if danmakuSpawnTimer > 3.6 && activeDanmaku.count < GameConfig.maxDanmakuItems {
             danmakuSpawnTimer = 0
             let text = GameTexts.danmakuTexts.randomElement() ?? ""
             let lane = Int.random(in: 0..<5)
@@ -670,6 +726,16 @@ extension GameScene {
             scorePopups[i].life -= CGFloat(dt)
             if scorePopups[i].life <= 0 { scorePopups.remove(at: i) }
         }
+    }
+    
+    func updateTutorial(dt: Double) {
+        guard tutorialStep >= 0 else { return }
+        tutorialTimer += dt
+    }
+    
+    func updateButtonFeedback(dt: Double) {
+        guard buttonFeedbackLife > 0 else { return }
+        buttonFeedbackLife = max(0, buttonFeedbackLife - CGFloat(dt) * 3.2)
     }
 
     func updateDragonGate(dt: Double) {

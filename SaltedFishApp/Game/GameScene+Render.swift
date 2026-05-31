@@ -20,6 +20,7 @@ extension GameScene {
             drawBackground(ctx: ctx)
             drawBubbles(ctx: ctx)
             drawStartScreen(ctx: ctx)
+            drawButtonFeedback(ctx: ctx)
         case .playing, .charging, .jumping:
             drawBackground(ctx: ctx)
             drawGrid(ctx: ctx)
@@ -37,6 +38,8 @@ extension GameScene {
             drawHUD(ctx: ctx)
             drawCancelZone(ctx: ctx)
             drawFishQuipVisual(ctx: ctx)
+            drawTutorialOverlay(ctx: ctx)
+            drawButtonFeedback(ctx: ctx)
         case .gameover:
             drawBackground(ctx: ctx)
             drawGrid(ctx: ctx)
@@ -44,9 +47,11 @@ extension GameScene {
             drawFish(ctx: ctx)
             drawParticlesAndRipples(ctx: ctx)
             drawGameOverScreen(ctx: ctx)
+            drawButtonFeedback(ctx: ctx)
         case .leaderboard:
             drawBackground(ctx: ctx)
             drawLeaderboardScreen(ctx: ctx)
+            drawButtonFeedback(ctx: ctx)
         }
     }
 
@@ -115,22 +120,25 @@ extension GameScene {
 
     // MARK: - Danmaku
     func drawDanmaku(ctx: CGContext) {
-        let font = UIFont(name: "Courier New", size: 14) ?? UIFont.monospacedSystemFont(ofSize: 14, weight: .bold)
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: mono14,
+            .foregroundColor: UIColor(white: 1, alpha: 0.45),
+            .strokeColor: UIColor.black.withAlphaComponent(0.45),
+            .strokeWidth: -2.5
+        ]
         for dm in activeDanmaku {
-            let attrs: [NSAttributedString.Key: Any] = [
-                .font: font,
-                .foregroundColor: UIColor(white: 1, alpha: 0.45),
-                .strokeColor: UIColor.black.withAlphaComponent(0.45),
-                .strokeWidth: -2.5
-            ]
             (dm.text as NSString).draw(at: CGPoint(x: dm.x, y: dm.y), withAttributes: attrs)
         }
     }
 
     // MARK: - Platforms
     func drawPlatforms(ctx: CGContext) {
-        // Pre-resolve font once outside loop
-        let labelFont = UIFont(name: "Courier New", size: 10) ?? UIFont.monospacedSystemFont(ofSize: 10, weight: .bold)
+        let labelAttrs: [NSAttributedString.Key: Any] = [
+            .font: mono10,
+            .foregroundColor: UIColor.white,
+            .strokeColor: UIColor.black,
+            .strokeWidth: -2.5
+        ]
 
         for p in platforms {
             var platY = p.y
@@ -181,13 +189,7 @@ extension GameScene {
 
             // Platform label
             if p.w > 30 {
-                let attrs: [NSAttributedString.Key: Any] = [
-                    .font: labelFont,
-                    .foregroundColor: UIColor.white,
-                    .strokeColor: UIColor.black,
-                    .strokeWidth: -2.5
-                ]
-                let label = NSAttributedString(string: p.type.label, attributes: attrs)
+                let label = NSAttributedString(string: p.type.label, attributes: labelAttrs)
                 let labelSize = label.size()
                 label.draw(at: CGPoint(x: screenX - labelSize.width / 2, y: platY - labelSize.height / 2))
             }
@@ -240,8 +242,7 @@ extension GameScene {
             ctx.addLine(to: CGPoint(x: x + 5, y: ly))
         }
         ctx.strokePath()
-        let font = UIFont(name: "Courier New", size: 7) ?? UIFont.monospacedSystemFont(ofSize: 7, weight: .bold)
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.red]
+        let attrs: [NSAttributedString.Key: Any] = [.font: mono7, .foregroundColor: UIColor.red]
         NSAttributedString(string: "PRD", attributes: attrs).draw(at: CGPoint(x: x - 7, y: y - 11))
     }
 

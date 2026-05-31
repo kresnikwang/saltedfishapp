@@ -26,7 +26,8 @@ extension GameScene {
             handleGameOverTouch(x: gx, y: gy)
         case .leaderboard:
             // Close button
-            if gx > size.width - 52 && gy < 52 {
+            if gx > size.width - 52 && gy < safeTopInset + 36 {
+                registerButtonFeedback(x: gx, y: gy)
                 gameStateVal = .gameover
             }
         default:
@@ -61,26 +62,37 @@ extension GameScene {
     }
 
     // MARK: - Touch Handlers
+    private func registerButtonFeedback(x: CGFloat, y: CGFloat) {
+        buttonFeedbackX = x
+        buttonFeedbackY = y
+        buttonFeedbackLife = 1.0
+        AudioManager.shared.playSound(.tap)
+        AudioManager.shared.vibrate(.light)
+    }
+    
     private func handleStartTouch(x: CGFloat, y: CGFloat) {
         let btnW: CGFloat = min(size.width * 0.42, 160)
         let btnH: CGFloat = 44
         let gap: CGFloat = 16
         let startX = (size.width - (btnW * 2 + gap)) / 2
-        let startY = size.height * 0.65
+        let startY = min(size.height - safeBottomInset - btnH - 28, size.height * 0.65)
 
         // Start button
         if x >= startX && x <= startX + btnW && y >= startY && y <= startY + btnH {
+            registerButtonFeedback(x: x, y: y)
             startGame()
             return
         }
         // Rank button
         if x >= startX + btnW + gap && x <= startX + btnW * 2 + gap && y >= startY && y <= startY + btnH {
+            registerButtonFeedback(x: x, y: y)
             showLeaderboard()
             return
         }
         // Mute button
         let muteSz: CGFloat = min(size.width * 0.1, 38)
-        if x >= size.width - muteSz - 14 && y <= muteSz + 16 {
+        if x >= size.width - muteSz - 14 && y >= safeTopInset - 12 && y <= safeTopInset + muteSz + 4 {
+            registerButtonFeedback(x: x, y: y)
             AudioManager.shared.toggleMute()
             return
         }
@@ -88,11 +100,12 @@ extension GameScene {
 
     private func handlePlayingTouch(x: CGFloat, y: CGFloat) {
         let hudBtnSize: CGFloat = min(size.width * 0.12, 42)
-        let safeTop: CGFloat = 50
+        let safeTop = safeTopInset
 
         // Calculator button (top right)
         if x >= size.width - hudBtnSize - 16 && x <= size.width - 16 &&
            y >= safeTop && y <= safeTop + hudBtnSize {
+            registerButtonFeedback(x: x, y: y)
             gameManager?.showCalculator = true
             return
         }
@@ -100,6 +113,7 @@ extension GameScene {
         // Mute button (next to calculator)
         if x >= size.width - hudBtnSize * 2 - 24 && x <= size.width - hudBtnSize - 24 &&
            y >= safeTop && y <= safeTop + hudBtnSize {
+            registerButtonFeedback(x: x, y: y)
             AudioManager.shared.toggleMute()
             return
         }
@@ -107,10 +121,13 @@ extension GameScene {
         // Start charging
         isCharging = true
         chargePower = 0
+        chargeProgress = 0
         chargeStartX = x
         chargeStartY = y
         chargeAngle = -.pi / 4
+        chargeReadyFeedbackPlayed = false
         gameStateVal = .charging
+        advanceTutorial(to: 1)
         AudioManager.shared.startChargeSound()
     }
 
@@ -120,17 +137,19 @@ extension GameScene {
         let gapX: CGFloat = 14
         let gapY: CGFloat = 12
         let startX = (size.width - (btnW * 2 + gapX)) / 2
-        let startY = size.height * 0.62
+        let startY = min(size.height - safeBottomInset - btnH * 2 - gapY - 24, size.height * 0.62)
 
         // Retry
         if x >= startX && x <= startX + btnW &&
            y >= startY && y <= startY + btnH {
+            registerButtonFeedback(x: x, y: y)
             startGame()
             return
         }
         // Submit
         if x >= startX + btnW + gapX && x <= startX + btnW * 2 + gapX &&
            y >= startY && y <= startY + btnH {
+            registerButtonFeedback(x: x, y: y)
             if !GameCenterManager.shared.isEnabled {
                 GameCenterManager.shared.authenticateLocalPlayer()
             } else {
@@ -141,12 +160,14 @@ extension GameScene {
         // Leaderboard
         if x >= startX && x <= startX + btnW &&
            y >= startY + btnH + gapY && y <= startY + btnH * 2 + gapY {
+            registerButtonFeedback(x: x, y: y)
             showLeaderboard()
             return
         }
         // Share
         if x >= startX + btnW + gapX && x <= startX + btnW * 2 + gapX &&
            y >= startY + btnH + gapY && y <= startY + btnH * 2 + gapY {
+            registerButtonFeedback(x: x, y: y)
             shareScore()
             return
         }

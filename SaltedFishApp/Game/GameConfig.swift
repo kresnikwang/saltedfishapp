@@ -42,6 +42,13 @@ struct GameConfig {
     static let gravity: CGFloat = 0.35
     static let maxPower: CGFloat = 18.0
     static let chargeRate: CGFloat = 0.25
+    static let chargeFullDuration: CGFloat = 1.25
+    static let chargeCurveExponent: CGFloat = 0.82
+    static let minLaunchPower: CGFloat = 4.2
+    static let chargeReadyThreshold: CGFloat = 0.88
+    static let aimSmoothingFactor: CGFloat = 0.30
+    static let minLaunchAngle: CGFloat = -CGFloat.pi * 0.82
+    static let maxLaunchAngle: CGFloat = -CGFloat.pi * 0.08
     static let platformMinGap: CGFloat = 60.0
     static let platformMaxGap: CGFloat = 160.0
     static let fishWidth: CGFloat = 40.0
@@ -49,6 +56,9 @@ struct GameConfig {
     static let platformHeight: CGFloat = 14.0
     static let slowMotionScale: CGFloat = 0.35
     static let cancelZoneRatio: CGFloat = 0.15
+    static let maxBubbles: Int = 12
+    static let maxDanmakuItems: Int = 4
+    static let maxTrajectoryDots: Int = 22
     static let perfectLandingZone: CGFloat = 0.15
     static let perfectMultiplier: CGFloat = 1.8
     static let baseScore: Int = 100
@@ -56,6 +66,11 @@ struct GameConfig {
     static let inputBufferWindow: TimeInterval = 0.3
     static let cameraLerpFactor: CGFloat = 0.12
     static let cameraBaseOffset: CGFloat = 0.3  // fraction of screen width
+    static let cameraChargeLookAhead: CGFloat = 0.34
+    static let cameraJumpLookAhead: CGFloat = 0.16
+    static let landingForgiveness: CGFloat = 7.0
+    static let landingVerticalForgiveness: CGFloat = 14.0
+    static let obstacleCollisionRadius: CGFloat = 20.0
 
     // Colors
     static let neonGreen = UIColor(red: 0, green: 1, blue: 136.0/255, alpha: 1)
@@ -339,6 +354,7 @@ class GamePersistence {
     private let lastDateKey = "sf_last_date"
     private let mutedKey = "sf_muted"
     private let leaderboardKey = "sf_local_leaderboard"
+    private let tutorialSeenKey = "sf_tutorial_seen"
 
     func getLocalLeaderboard() -> [LeaderboardEntry] {
         if let data = UserDefaults.standard.data(forKey: leaderboardKey),
@@ -392,6 +408,11 @@ class GamePersistence {
     var isMuted: Bool {
         get { UserDefaults.standard.bool(forKey: mutedKey) }
         set { UserDefaults.standard.set(newValue, forKey: mutedKey) }
+    }
+    
+    var hasSeenTutorial: Bool {
+        get { UserDefaults.standard.bool(forKey: tutorialSeenKey) }
+        set { UserDefaults.standard.set(newValue, forKey: tutorialSeenKey) }
     }
 
     var streakBonus: CGFloat {

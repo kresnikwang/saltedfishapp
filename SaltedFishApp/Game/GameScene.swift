@@ -26,6 +26,8 @@ class GameScene: SKScene {
     var inputBufferTime: TimeInterval = 0
     var bufferedPointerX: CGFloat = -999
     var bufferedPointerY: CGFloat = -999
+    var safeTopInset: CGFloat = 50
+    var safeBottomInset: CGFloat = 20
 
     // Fish state
     var fishX: CGFloat = 0
@@ -40,10 +42,12 @@ class GameScene: SKScene {
 
     // Charge state
     var chargePower: CGFloat = 0
+    var chargeProgress: CGFloat = 0
     var chargeAngle: CGFloat = -.pi / 4
     var chargeStartX: CGFloat = 0
     var chargeStartY: CGFloat = 0
     var isCharging = false
+    var chargeReadyFeedbackPlayed = false
 
     // Fish quip
     var fishQuip = ""
@@ -76,16 +80,41 @@ class GameScene: SKScene {
     var pointerX: CGFloat = -999
     var pointerY: CGFloat = -999
     var isTouching = false
+    var tutorialStep: Int = -1
+    var tutorialTimer: TimeInterval = 0
+    var buttonFeedbackX: CGFloat = -999
+    var buttonFeedbackY: CGFloat = -999
+    var buttonFeedbackLife: CGFloat = 0
 
     // Last update time
     var lastUpdateTime: TimeInterval = 0
 
     // MARK: - Persistent Render Sprite (reused every frame to avoid GPU texture churn)
     var renderSprite: SKSpriteNode?
+    var lastRenderedSize: CGSize = .zero
+    
+    // Fonts reused during custom drawing to reduce per-frame allocations.
+    let mono7 = UIFont(name: "Courier New", size: 7) ?? UIFont.monospacedSystemFont(ofSize: 7, weight: .bold)
+    let mono10 = UIFont(name: "Courier New", size: 10) ?? UIFont.monospacedSystemFont(ofSize: 10, weight: .bold)
+    let mono12 = UIFont(name: "Courier New", size: 12) ?? UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
+    let mono13 = UIFont(name: "Courier New", size: 13) ?? UIFont.monospacedSystemFont(ofSize: 13, weight: .bold)
+    let mono14 = UIFont(name: "Courier New", size: 14) ?? UIFont.monospacedSystemFont(ofSize: 14, weight: .bold)
+    let mono15 = UIFont(name: "Courier New", size: 15) ?? UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
+    let mono16 = UIFont(name: "Courier New", size: 16) ?? UIFont.monospacedSystemFont(ofSize: 16, weight: .bold)
+    let mono18 = UIFont(name: "Courier New", size: 18) ?? UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
+    let mono22 = UIFont(name: "Courier New", size: 22) ?? UIFont.monospacedSystemFont(ofSize: 22, weight: .bold)
+    let mono32 = UIFont(name: "Courier New", size: 32) ?? UIFont.monospacedSystemFont(ofSize: 32, weight: .bold)
+    let mono44 = UIFont(name: "Courier New", size: 44) ?? UIFont.monospacedSystemFont(ofSize: 44, weight: .bold)
+    let mono48 = UIFont(name: "Courier New", size: 48) ?? UIFont.monospacedSystemFont(ofSize: 48, weight: .bold)
+    let iconFont = UIFont.systemFont(ofSize: 18)
 
     // MARK: - Scene Lifecycle
     override func didMove(to view: SKView) {
         backgroundColor = GameConfig.bgDark
+        safeTopInset = max(44, view.safeAreaInsets.top + 16)
+        safeBottomInset = max(20, view.safeAreaInsets.bottom + 12)
+        view.ignoresSiblingOrder = true
+        view.allowsTransparency = false
         GamePersistence.shared.checkDaily()
         initBubbles()
         gameTime = 0
@@ -105,26 +134,40 @@ class GameScene: SKScene {
         // Hint SpriteKit to run at 60fps cap (30fps on simulator is enough but let's keep it smooth)
         view.preferredFramesPerSecond = 60
     }
+    
+    override func didChangeSize(_ oldSize: CGSize) {
+        if let view = view {
+            safeTopInset = max(44, view.safeAreaInsets.top + 16)
+            safeBottomInset = max(20, view.safeAreaInsets.bottom + 12)
+        }
+        renderSprite?.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        initBubbles()
+    }
 
     // MARK: - Platform Generation
     func generateMorePlatforms(count: Int) {
         for _ in 0..<count {
             let index = generatedPlatformCount
             let diff = min(1.0, CGFloat(index) / 100.0)
-            var w = (50 - diff * 20) + CGFloat.random(in: 0...(40 - diff * 10))
+            let earlyEase = min(1.0, CGFloat(max(index - 3, 0)) / 14.0)
+            let earlyWidthBonus = max(0, 10 - CGFloat(index)) * 2.0
+            var w = (50 - diff * 20) + CGFloat.random(in: 0...(40 - diff * 10)) + earlyWidthBonus
             var type: PlatformType = .normal
 
-            let meetingProb = 0.15 + diff * 0.15
-            let clientProb = 0.1 + diff * 0.1
+            let meetingProb = (0.10 + diff * 0.18) * earlyEase
+            let clientProb = (0.06 + diff * 0.12) * earlyEase
             if index > 3 && CGFloat.random(in: 0...1) < meetingProb { type = .meeting }
             if index > 5 && CGFloat.random(in: 0...1) < clientProb { type = .client }
-            if index > 2 && CGFloat.random(in: 0...1) < 0.08 { type = .tea }
-            if index > 8 && CGFloat.random(in: 0...1) < 0.08 { type = .spring }
-            if index > 10 && CGFloat.random(in: 0...1) < 0.07 { type = .vanish }
-            if index > 12 && CGFloat.random(in: 0...1) < 0.06 { type = .slide }
-            if index > 15 && CGFloat.random(in: 0...1) < 0.05 { type = .boss }
+            if index > 4 && CGFloat.random(in: 0...1) < 0.06 * earlyEase { type = .tea }
+            if index > 10 && CGFloat.random(in: 0...1) < 0.08 { type = .spring }
+            if index > 14 && CGFloat.random(in: 0...1) < 0.07 { type = .vanish }
+            if index > 16 && CGFloat.random(in: 0...1) < 0.06 { type = .slide }
+            if index > 20 && CGFloat.random(in: 0...1) < 0.05 { type = .boss }
             if index == 0 { type = .normal }
             if type == .meeting { w = (40 - diff * 15) + CGFloat.random(in: 0...20) }
+            if index < 12, let previousType = platforms.last?.type, previousType != .normal, type != .normal {
+                type = .normal
+            }
 
             platforms.append(PlatformData(
                 x: lastPlatformX, y: lastPlatformY,
@@ -133,7 +176,8 @@ class GameScene: SKScene {
             ))
 
             // Add obstacles
-            if index > 3 && CGFloat.random(in: 0...1) < (0.3 + diff * 0.4) {
+            let obstacleChance = (0.18 + diff * 0.45) * max(0.35, earlyEase)
+            if index > 8 && CGFloat.random(in: 0...1) < obstacleChance {
                 let ox = lastPlatformX - 20 + CGFloat.random(in: 0...40)
                 var oy = lastPlatformY - 40 - CGFloat.random(in: 0...60)
                 let r = CGFloat.random(in: 0...1)
@@ -144,10 +188,15 @@ class GameScene: SKScene {
                 obstacles.append(ObstacleData(x: ox, y: oy, type: otype, bobOffset: CGFloat.random(in: 0...(CGFloat.pi * 2)), startX: ox))
             }
 
+            let trainingGaps: [CGFloat] = [82, 96, 112, 128, 104, 142]
             let gapAdd = diff * 80
-            lastPlatformX += GameConfig.platformMinGap + gapAdd + CGFloat.random(in: 0...(GameConfig.platformMaxGap - GameConfig.platformMinGap + gapAdd))
-            let heightVar: CGFloat = 80 + diff * 60
-            lastPlatformY += (CGFloat.random(in: 0...1) - 0.55) * heightVar
+            if index < trainingGaps.count {
+                lastPlatformX += trainingGaps[index]
+            } else {
+                lastPlatformX += GameConfig.platformMinGap + gapAdd + CGFloat.random(in: 0...(GameConfig.platformMaxGap - GameConfig.platformMinGap + gapAdd))
+            }
+            let heightVar: CGFloat = index < 8 ? 48 : 80 + diff * 60
+            lastPlatformY += (CGFloat.random(in: 0...1) - (index < 8 ? 0.50 : 0.55)) * heightVar
             lastPlatformY = max(size.height * 0.25, min(size.height * 0.85, lastPlatformY))
 
             generatedPlatformCount += 1
@@ -157,7 +206,7 @@ class GameScene: SKScene {
     // MARK: - Bubbles
     func initBubbles() {
         bubbles = []
-        for _ in 0..<15 {
+        for _ in 0..<GameConfig.maxBubbles {
             bubbles.append(Bubble(
                 x: cameraXOffset + CGFloat.random(in: 0...size.width),
                 y: CGFloat.random(in: 0...size.height),
@@ -173,10 +222,14 @@ class GameScene: SKScene {
         score = 0; combo = 0; level = 1
         currentPlatformIdx = 0; furthestPlatformIdx = 0
         particles = []; ripples = []; obstacles = []
-        chargePower = 0; isCharging = false
+        chargePower = 0; chargeProgress = 0; isCharging = false
+        chargeReadyFeedbackPlayed = false
         scorePopups = []
         dragonGate = nil
         currentDeathQuote = ""
+        tutorialStep = GamePersistence.shared.hasSeenTutorial ? -1 : 0
+        tutorialTimer = 0
+        buttonFeedbackLife = 0
 
         platforms = []
         lastPlatformX = size.width * 0.3
@@ -203,6 +256,18 @@ class GameScene: SKScene {
         danmakuSpawnTimer = 0
 
         showLevelUpPopup(text: Localized.string(zh: "按住屏幕蓄力 · 拖动瞄准 · 松手跳跃", en: "Hold to charge · Drag to aim · Release to jump", ja: "画面長押しでチャージ ・ ドラッグで照準 ・ 指を離してジャンプ"), color: GameConfig.neonGreen)
+    }
+    
+    func advanceTutorial(to step: Int) {
+        guard tutorialStep >= 0, step > tutorialStep else { return }
+        tutorialStep = step
+        tutorialTimer = 0
+    }
+    
+    func finishTutorial() {
+        guard tutorialStep >= 0 else { return }
+        tutorialStep = -1
+        GamePersistence.shared.hasSeenTutorial = true
     }
 
     func triggerGameOver() {
