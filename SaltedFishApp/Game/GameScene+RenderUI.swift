@@ -421,25 +421,112 @@ extension GameScene {
 
     private func drawHUDButton(ctx: CGContext, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat,
                                 text: String, color: UIColor) {
-        ctx.setFillColor(UIColor.black.withAlphaComponent(0.3).cgColor)
+        ctx.setFillColor(GameConfig.panelFill.withAlphaComponent(0.72).cgColor)
         let path = UIBezierPath(roundedRect: CGRect(x: x, y: y, width: w, height: h), cornerRadius: 8)
         ctx.addPath(path.cgPath)
         ctx.fillPath()
-        ctx.setStrokeColor(color.withAlphaComponent(0.3).cgColor)
-        ctx.setLineWidth(1)
+
+        ctx.setFillColor(color.withAlphaComponent(0.10).cgColor)
+        ctx.addPath(path.cgPath)
+        ctx.fillPath()
+
+        ctx.setStrokeColor(color.withAlphaComponent(0.75).cgColor)
+        ctx.setLineWidth(1.5)
         ctx.addPath(path.cgPath)
         ctx.strokePath()
 
-        let attrs: [NSAttributedString.Key: Any] = [.font: iconFont]
-        let textSize = (text as NSString).size(withAttributes: attrs)
-        (text as NSString).draw(at: CGPoint(x: x + (w - textSize.width) / 2,
-                                             y: y + (h - textSize.height) / 2), withAttributes: attrs)
+        if text == "🧮" {
+            drawCalculatorIcon(ctx: ctx, rect: CGRect(x: x, y: y, width: w, height: h), color: color)
+        } else if text == "🔇" || text == "🔊" {
+            drawSpeakerIcon(ctx: ctx, rect: CGRect(x: x, y: y, width: w, height: h),
+                            color: color, muted: text == "🔇")
+        } else {
+            let attrs: [NSAttributedString.Key: Any] = [.font: iconFont]
+            let textSize = (text as NSString).size(withAttributes: attrs)
+            (text as NSString).draw(at: CGPoint(x: x + (w - textSize.width) / 2,
+                                                 y: y + (h - textSize.height) / 2), withAttributes: attrs)
+        }
+    }
+
+    private func drawCalculatorIcon(ctx: CGContext, rect: CGRect, color: UIColor) {
+        let iconRect = rect.insetBy(dx: rect.width * 0.27, dy: rect.height * 0.19)
+        let bodyPath = UIBezierPath(roundedRect: iconRect, cornerRadius: 3)
+
+        ctx.setFillColor(color.withAlphaComponent(0.18).cgColor)
+        ctx.addPath(bodyPath.cgPath)
+        ctx.fillPath()
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(1.8)
+        ctx.addPath(bodyPath.cgPath)
+        ctx.strokePath()
+
+        let displayRect = CGRect(x: iconRect.minX + 4, y: iconRect.minY + 4,
+                                 width: iconRect.width - 8, height: iconRect.height * 0.24)
+        ctx.setFillColor(UIColor.black.withAlphaComponent(0.55).cgColor)
+        ctx.fill(displayRect)
+        ctx.setStrokeColor(color.withAlphaComponent(0.65).cgColor)
+        ctx.setLineWidth(0.8)
+        ctx.stroke(displayRect)
+
+        let keySize = max(2.8, iconRect.width * 0.16)
+        let gap = (iconRect.width - keySize * 3) / 4
+        let startY = displayRect.maxY + 5
+        ctx.setFillColor(color.withAlphaComponent(0.95).cgColor)
+        for row in 0..<2 {
+            for col in 0..<3 {
+                let keyX = iconRect.minX + gap + CGFloat(col) * (keySize + gap)
+                let keyY = startY + CGFloat(row) * (keySize + 4)
+                ctx.fill(CGRect(x: keyX, y: keyY, width: keySize, height: keySize))
+            }
+        }
+    }
+
+    private func drawSpeakerIcon(ctx: CGContext, rect: CGRect, color: UIColor, muted: Bool) {
+        let centerY = rect.midY
+        let left = rect.minX + rect.width * 0.26
+        let speakerW = rect.width * 0.32
+        let speakerH = rect.height * 0.34
+
+        ctx.setFillColor(color.withAlphaComponent(0.95).cgColor)
+        ctx.beginPath()
+        ctx.move(to: CGPoint(x: left, y: centerY - speakerH * 0.28))
+        ctx.addLine(to: CGPoint(x: left + speakerW * 0.32, y: centerY - speakerH * 0.28))
+        ctx.addLine(to: CGPoint(x: left + speakerW, y: centerY - speakerH * 0.58))
+        ctx.addLine(to: CGPoint(x: left + speakerW, y: centerY + speakerH * 0.58))
+        ctx.addLine(to: CGPoint(x: left + speakerW * 0.32, y: centerY + speakerH * 0.28))
+        ctx.addLine(to: CGPoint(x: left, y: centerY + speakerH * 0.28))
+        ctx.closePath()
+        ctx.fillPath()
+
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(2)
+        ctx.setLineCap(.round)
+
+        if muted {
+            let slashStart = CGPoint(x: rect.minX + rect.width * 0.64, y: rect.minY + rect.height * 0.32)
+            let slashEnd = CGPoint(x: rect.minX + rect.width * 0.82, y: rect.minY + rect.height * 0.68)
+            ctx.move(to: slashStart)
+            ctx.addLine(to: slashEnd)
+            ctx.move(to: CGPoint(x: slashEnd.x, y: slashStart.y))
+            ctx.addLine(to: CGPoint(x: slashStart.x, y: slashEnd.y))
+            ctx.strokePath()
+        } else {
+            let waveCenter = CGPoint(x: left + speakerW * 0.92, y: centerY)
+            ctx.addArc(center: waveCenter, radius: rect.width * 0.17,
+                       startAngle: -0.72, endAngle: 0.72, clockwise: false)
+            ctx.addArc(center: waveCenter, radius: rect.width * 0.27,
+                       startAngle: -0.62, endAngle: 0.62, clockwise: false)
+            ctx.strokePath()
+        }
+
+        ctx.setLineCap(.butt)
     }
 
     // MARK: - Start Screen
     func drawStartScreen(ctx: CGContext) {
         let compact = size.height < 700
-        let titleY = max(safeTopInset + 36, size.height * (compact ? 0.20 : 0.3))
+        let english = Localized.isEnglish
+        let titleY = max(safeTopInset + 36, size.height * (compact ? 0.20 : english ? 0.27 : 0.3))
         
         // Title
         let titleAttrs: [NSAttributedString.Key: Any] = [
@@ -448,7 +535,7 @@ extension GameScene {
             .strokeColor: UIColor.black,
             .strokeWidth: -3.5
         ]
-        let title = Localized.string(zh: "鱼来运转", en: "Slacker Fish", ja: "サボり鯛")
+        let title = "Tiny Buff"
         let titleSize = (title as NSString).size(withAttributes: titleAttrs)
         (title as NSString).draw(at: CGPoint(x: (size.width - titleSize.width) / 2,
                                               y: titleY), withAttributes: titleAttrs)
@@ -460,7 +547,7 @@ extension GameScene {
             .strokeColor: UIColor.black,
             .strokeWidth: -3.0
         ]
-        let sub = Localized.string(zh: "FISH FORTUNE", en: "OFFICE JUMPER", ja: "出世ジャンプ")
+        let sub = Localized.string(zh: "FISH FORTUNE", en: "JUMP. LAND. REPEAT.", ja: "出世ジャンプ")
         let subSize = (sub as NSString).size(withAttributes: subAttrs)
         (sub as NSString).draw(at: CGPoint(x: (size.width - subSize.width) / 2,
                                             y: titleY + (compact ? 40 : 52)), withAttributes: subAttrs)
@@ -468,13 +555,13 @@ extension GameScene {
         // Stats
         let statsAttrs: [NSAttributedString.Key: Any] = [
             .font: mono13,
-            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+            .foregroundColor: GameConfig.textSecondary,
             .strokeColor: UIColor.black,
             .strokeWidth: -3.0
         ]
         let stats = Localized.string(
             zh: "历史最高: \(GamePersistence.shared.highScore) 分 | 连续签到: \(GamePersistence.shared.streak) 天",
-            en: "High Score: \(GamePersistence.shared.highScore) | Streak: \(GamePersistence.shared.streak) days",
+            en: "Best \(GamePersistence.shared.highScore)",
             ja: "ハイスコア: \(GamePersistence.shared.highScore) | ログイン継続: \(GamePersistence.shared.streak)日"
         )
         let statsSize = (stats as NSString).size(withAttributes: statsAttrs)
@@ -482,18 +569,21 @@ extension GameScene {
                                               y: titleY + (compact ? 78 : 112)), withAttributes: statsAttrs)
 
         // Tagline
-        let tagAttrs: [NSAttributedString.Key: Any] = [
-            .font: mono15,
-            .foregroundColor: GameConfig.goldColor.withAlphaComponent(0.95),
-            .strokeColor: UIColor.black,
-            .strokeWidth: -3.0
-        ]
-        let tag = Localized.string(zh: "时来运转，一跃成龙", en: "Slack off to rise, leap to the top", ja: "サボって登りつめ、龍となれ")
-        let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
-        (tag as NSString).draw(at: CGPoint(x: (size.width - tagSize.width) / 2,
-                                            y: titleY + (compact ? 104 : 146)), withAttributes: tagAttrs)
-        
-        drawStartInstructions(ctx: ctx, y: titleY + (compact ? 136 : 184))
+        if english {
+            drawEnglishStartHint(ctx: ctx, y: titleY + (compact ? 106 : 146))
+        } else {
+            let tagAttrs: [NSAttributedString.Key: Any] = [
+                .font: mono15,
+                .foregroundColor: GameConfig.goldColor.withAlphaComponent(0.95),
+                .strokeColor: UIColor.black,
+                .strokeWidth: -3.0
+            ]
+            let tag = Localized.string(zh: "时来运转，一跃成龙", en: "Slack off to rise, leap to the top", ja: "サボって登りつめ、龍となれ")
+            let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
+            (tag as NSString).draw(at: CGPoint(x: (size.width - tagSize.width) / 2,
+                                                y: titleY + (compact ? 104 : 146)), withAttributes: tagAttrs)
+            drawStartInstructions(ctx: ctx, y: titleY + (compact ? 136 : 184))
+        }
 
         // Buttons
         let btnW = min(size.width * 0.42, 160)
@@ -516,6 +606,18 @@ extension GameScene {
         // Animated fish icon
         let fishIconY = max(safeTopInset + 10, titleY - (compact ? 42 : 72)) + sin(gameTime * 2) * 5
         drawMiniFish(ctx: ctx, x: size.width / 2, y: fishIconY, scale: 2.0)
+    }
+
+    private func drawEnglishStartHint(ctx: CGContext, y: CGFloat) {
+        let text = "Hold to charge  •  drag to aim"
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: mono14,
+            .foregroundColor: GameConfig.goldColor,
+            .strokeColor: UIColor.black,
+            .strokeWidth: -3.0
+        ]
+        let textSize = (text as NSString).size(withAttributes: attrs)
+        (text as NSString).draw(at: CGPoint(x: (size.width - textSize.width) / 2, y: y), withAttributes: attrs)
     }
     
     private func drawStartInstructions(ctx: CGContext, y: CGFloat) {
@@ -574,19 +676,26 @@ extension GameScene {
     // MARK: - Game Over Screen
     func drawGameOverScreen(ctx: CGContext) {
         // Dark overlay
-        ctx.setFillColor(UIColor.black.withAlphaComponent(0.92).cgColor)
+        ctx.setFillColor(UIColor.black.withAlphaComponent(0.78).cgColor)
         ctx.fill(CGRect(x: 0, y: 0, width: size.width, height: size.height))
 
         let centerX = size.width / 2
         let compact = size.height < 700
         let topY = max(safeTopInset + 24, size.height * (compact ? 0.13 : 0.2))
+        let contentBottomY = topY + (compact ? 174 : 236)
+        let panelW = min(size.width - 36, 360)
+        let panelRect = CGRect(x: centerX - panelW / 2,
+                               y: topY - 22,
+                               width: panelW,
+                               height: contentBottomY - topY + 44)
+        drawPanel(ctx: ctx, rect: panelRect, borderColor: GameConfig.neonGreen.withAlphaComponent(0.26))
 
         // Death quote
         let quoteAttrs: [NSAttributedString.Key: Any] = [
-            .font: compact ? mono15 : mono18,
+            .font: compact ? mono16 : mono18,
             .foregroundColor: GameConfig.errorRed,
             .strokeColor: UIColor.black,
-            .strokeWidth: -3.0
+            .strokeWidth: -3.5
         ]
         let quoteSize = (currentDeathQuote as NSString).size(withAttributes: quoteAttrs)
         (currentDeathQuote as NSString).draw(at: CGPoint(x: centerX - quoteSize.width / 2,
@@ -594,10 +703,10 @@ extension GameScene {
 
         // Score
         let scoreAttrs: [NSAttributedString.Key: Any] = [
-            .font: compact ? mono44 : mono48,
+            .font: compact ? mono48 : mono56,
             .foregroundColor: GameConfig.neonGreen,
             .strokeColor: UIColor.black,
-            .strokeWidth: -3.5
+            .strokeWidth: -4.0
         ]
         let scoreText = "\(score)"
         let scoreSize = (scoreText as NSString).size(withAttributes: scoreAttrs)
@@ -607,10 +716,10 @@ extension GameScene {
         // Level desc
         let lvConfig = gameLevels[min(level - 1, gameLevels.count - 1)]
         let lvAttrs: [NSAttributedString.Key: Any] = [
-            .font: compact ? mono15 : mono18,
+            .font: compact ? mono16 : mono18,
             .foregroundColor: lvConfig.color,
             .strokeColor: UIColor.black,
-            .strokeWidth: -3.0
+            .strokeWidth: -3.5
         ]
         let lvSize = (lvConfig.desc as NSString).size(withAttributes: lvAttrs)
         (lvConfig.desc as NSString).draw(at: CGPoint(x: centerX - lvSize.width / 2,
@@ -619,11 +728,11 @@ extension GameScene {
         // High score
         let hiAttrs: [NSAttributedString.Key: Any] = [
             .font: mono15,
-            .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+            .foregroundColor: GameConfig.textPrimary,
             .strokeColor: UIColor.black,
             .strokeWidth: -3.0
         ]
-        let hiText = Localized.string(zh: "历史最高: \(GamePersistence.shared.highScore) 分", en: "High Score: \(GamePersistence.shared.highScore)", ja: "ハイスコア: \(GamePersistence.shared.highScore)")
+        let hiText = Localized.string(zh: "历史最高: \(GamePersistence.shared.highScore) 分", en: "Best \(GamePersistence.shared.highScore)", ja: "ハイスコア: \(GamePersistence.shared.highScore)")
         let hiSize = (hiText as NSString).size(withAttributes: hiAttrs)
         (hiText as NSString).draw(at: CGPoint(x: centerX - hiSize.width / 2,
                                                y: topY + (compact ? 126 : 174)), withAttributes: hiAttrs)
@@ -637,11 +746,11 @@ extension GameScene {
         let startY = min(size.height - safeBottomInset - btnH * 2 - gapY - 24, size.height * 0.62)
 
         drawButton(ctx: ctx, x: startX, y: startY, w: btnW, h: btnH,
-                   text: Localized.string(zh: "再翻一次", en: "Flip Again", ja: "もう一度サボる"), color: GameConfig.neonGreen)
+                   text: Localized.string(zh: "再翻一次", en: "Retry", ja: "もう一度サボる"), color: GameConfig.neonGreen)
         drawButton(ctx: ctx, x: startX + btnW + gapX, y: startY, w: btnW, h: btnH,
                    text: Localized.string(zh: "提交成绩", en: "Submit", ja: "スコア送信"), color: GameConfig.goldColor)
         drawButton(ctx: ctx, x: startX, y: startY + btnH + gapY, w: btnW, h: btnH,
-                   text: Localized.string(zh: "查看排行", en: "Leaderboard", ja: "順位表"), color: UIColor(hex: "#aa66ff"))
+                   text: Localized.string(zh: "查看排行", en: "Ranks", ja: "順位表"), color: UIColor(hex: "#aa66ff"))
         drawButton(ctx: ctx, x: startX + btnW + gapX, y: startY + btnH + gapY, w: btnW, h: btnH,
                    text: Localized.string(zh: "炫耀一下", en: "Share", ja: "自慢する"), color: UIColor(hex: "#00aaff"))
     }
@@ -657,7 +766,7 @@ extension GameScene {
             .strokeColor: UIColor.black,
             .strokeWidth: -3.0
         ]
-        let title = Localized.string(zh: "🏆 办公室摸鱼榜", en: "🏆 Office Slacker Board", ja: "🏆 社内サボり順位")
+        let title = Localized.string(zh: "🏆 办公室摸鱼榜", en: "🏆 Ranks", ja: "🏆 社内サボり順位")
         let titleSize = (title as NSString).size(withAttributes: titleAttrs)
         (title as NSString).draw(at: CGPoint(x: (size.width - titleSize.width) / 2,
                                               y: safeTopInset + 12), withAttributes: titleAttrs)
@@ -729,26 +838,41 @@ extension GameScene {
     func drawButton(ctx: CGContext, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat,
                     text: String, color: UIColor) {
         let rect = CGRect(x: x, y: y, width: w, height: h)
-        let path = UIBezierPath(roundedRect: rect, cornerRadius: 4)
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: 7)
 
-        ctx.setStrokeColor(color.cgColor)
-        ctx.setLineWidth(1.5)
-        ctx.addPath(path.cgPath)
-        ctx.strokePath()
-
-        ctx.setFillColor(color.withAlphaComponent(0.12).cgColor)
+        ctx.setFillColor(GameConfig.panelFill.withAlphaComponent(0.72).cgColor)
         ctx.addPath(path.cgPath)
         ctx.fillPath()
 
+        ctx.setFillColor(color.withAlphaComponent(0.22).cgColor)
+        ctx.addPath(path.cgPath)
+        ctx.fillPath()
+
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(2)
+        ctx.addPath(path.cgPath)
+        ctx.strokePath()
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: mono16,
-            .foregroundColor: color,
+            .foregroundColor: UIColor.white,
             .strokeColor: UIColor.black,
-            .strokeWidth: -3.0
+            .strokeWidth: -3.5
         ]
         let textSize = (text as NSString).size(withAttributes: attrs)
         (text as NSString).draw(at: CGPoint(x: x + (w - textSize.width) / 2,
                                              y: y + (h - textSize.height) / 2), withAttributes: attrs)
+    }
+
+    private func drawPanel(ctx: CGContext, rect: CGRect, borderColor: UIColor) {
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: 16)
+        ctx.setFillColor(GameConfig.panelFill.withAlphaComponent(0.78).cgColor)
+        ctx.addPath(path.cgPath)
+        ctx.fillPath()
+        ctx.setStrokeColor(borderColor.cgColor)
+        ctx.setLineWidth(1.5)
+        ctx.addPath(path.cgPath)
+        ctx.strokePath()
     }
     
     // MARK: - Tutorial & Button Feedback
@@ -760,18 +884,18 @@ extension GameScene {
         let body: String
         switch tutorialStep {
         case 0:
-            title = Localized.string(zh: "第一步：按住蓄力", en: "Step 1: Hold to charge", ja: "ステップ1：長押し")
-            body = Localized.string(zh: "按住任意空白处，能量环会开始增长。", en: "Hold anywhere empty and watch the power ring grow.", ja: "空いている場所を長押しすると、パワーが溜まります。")
+            title = Localized.string(zh: "第一步：按住蓄力", en: "Hold", ja: "ステップ1：長押し")
+            body = Localized.string(zh: "按住任意空白处，能量环会开始增长。", en: "Press anywhere to charge.", ja: "空いている場所を長押しすると、パワーが溜まります。")
         case 1:
-            title = Localized.string(zh: "第二步：拖动瞄准", en: "Step 2: Drag to aim", ja: "ステップ2：ドラッグ")
-            body = Localized.string(zh: "手指移动会改变虚线轨迹，拖到底部红区可取消。", en: "Move your finger to bend the dotted path. Drag to the red zone to cancel.", ja: "指を動かすと軌道が変わります。赤いエリアでキャンセル。")
+            title = Localized.string(zh: "第二步：拖动瞄准", en: "Aim", ja: "ステップ2：ドラッグ")
+            body = Localized.string(zh: "手指移动会改变虚线轨迹，拖到底部红区可取消。", en: "Drag to steer. Red zone cancels.", ja: "指を動かすと軌道が変わります。赤いエリアでキャンセル。")
         default:
-            title = Localized.string(zh: "第三步：松手跳跃", en: "Step 3: Release to jump", ja: "ステップ3：離す")
-            body = Localized.string(zh: "落在平台发光中心可获得 PERFECT 和更高连击。", en: "Land on the bright center for PERFECT and bigger combos.", ja: "中央に着地すると PERFECT とコンボが伸びます。")
+            title = Localized.string(zh: "第三步：松手跳跃", en: "Release", ja: "ステップ3：離す")
+            body = Localized.string(zh: "落在平台发光中心可获得 PERFECT 和更高连击。", en: "Hit the center for PERFECT.", ja: "中央に着地すると PERFECT とコンボが伸びます。")
         }
         
         let cardW = min(size.width - 36, 360)
-        let cardH: CGFloat = 88
+        let cardH: CGFloat = Localized.isEnglish ? 74 : 88
         let cardY = min(size.height - safeBottomInset - cardH - 22, max(safeTopInset + 92, size.height * 0.68))
         let rect = CGRect(x: (size.width - cardW) / 2, y: cardY, width: cardW, height: cardH)
         

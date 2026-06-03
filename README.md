@@ -1,4 +1,4 @@
-# 🐟 鱼来运转 (SaltedFish App) - iOS Native
+# 🐟 Tiny Buff - iOS Native
 
 [![Swift](https://img.shields.io/badge/Swift-5.0-orange.svg?style=flat-square)](https://developer.apple.com/swift/)
 [![SpriteKit](https://img.shields.io/badge/SpriteKit-iOS_16.0+-blue.svg?style=flat-square)](https://developer.apple.com/documentation/spritekit)
@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=flat-square)](LICENSE)
 
 > **带薪摸鱼，锦鲤翻身！** 
-> 原生 iOS 版本的「鱼来运转」休闲弹射跳跃游戏，基于微信小程序原版游戏逻辑及物理手感进行高精度原生复刻与手感优化。
+> 原生 iOS 版本的「Tiny Buff」休闲弹射跳跃游戏，基于微信小程序原版游戏逻辑及物理手感进行高精度原生复刻与手感优化。
 
 ---
 

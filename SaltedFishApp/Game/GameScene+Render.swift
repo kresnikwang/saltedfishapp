@@ -187,8 +187,8 @@ extension GameScene {
                 ctx.fillPath()
             }
 
-            // Platform label
-            if p.w > 30 {
+            // Keep ordinary platforms visually quiet; labels are only useful for special tiles.
+            if p.type != .normal && p.w > 30 {
                 let label = NSAttributedString(string: p.type.label, attributes: labelAttrs)
                 let labelSize = label.size()
                 label.draw(at: CGPoint(x: screenX - labelSize.width / 2, y: platY - labelSize.height / 2))

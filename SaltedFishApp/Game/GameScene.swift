@@ -94,19 +94,20 @@ class GameScene: SKScene {
     var lastRenderedSize: CGSize = .zero
     
     // Fonts reused during custom drawing to reduce per-frame allocations.
-    let mono7 = UIFont(name: "Courier New", size: 7) ?? UIFont.monospacedSystemFont(ofSize: 7, weight: .bold)
-    let mono10 = UIFont(name: "Courier New", size: 10) ?? UIFont.monospacedSystemFont(ofSize: 10, weight: .bold)
-    let mono12 = UIFont(name: "Courier New", size: 12) ?? UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
-    let mono13 = UIFont(name: "Courier New", size: 13) ?? UIFont.monospacedSystemFont(ofSize: 13, weight: .bold)
-    let mono14 = UIFont(name: "Courier New", size: 14) ?? UIFont.monospacedSystemFont(ofSize: 14, weight: .bold)
-    let mono15 = UIFont(name: "Courier New", size: 15) ?? UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
-    let mono16 = UIFont(name: "Courier New", size: 16) ?? UIFont.monospacedSystemFont(ofSize: 16, weight: .bold)
-    let mono18 = UIFont(name: "Courier New", size: 18) ?? UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
-    let mono22 = UIFont(name: "Courier New", size: 22) ?? UIFont.monospacedSystemFont(ofSize: 22, weight: .bold)
-    let mono32 = UIFont(name: "Courier New", size: 32) ?? UIFont.monospacedSystemFont(ofSize: 32, weight: .bold)
-    let mono44 = UIFont(name: "Courier New", size: 44) ?? UIFont.monospacedSystemFont(ofSize: 44, weight: .bold)
-    let mono48 = UIFont(name: "Courier New", size: 48) ?? UIFont.monospacedSystemFont(ofSize: 48, weight: .bold)
-    let iconFont = UIFont.systemFont(ofSize: 18)
+    let mono7 = UIFont.monospacedSystemFont(ofSize: 7, weight: .bold)
+    let mono10 = UIFont.monospacedSystemFont(ofSize: 10, weight: .bold)
+    let mono12 = UIFont.monospacedSystemFont(ofSize: 12, weight: .bold)
+    let mono13 = UIFont.monospacedSystemFont(ofSize: 13, weight: .bold)
+    let mono14 = UIFont.monospacedSystemFont(ofSize: 14, weight: .bold)
+    let mono15 = UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
+    let mono16 = UIFont.monospacedSystemFont(ofSize: 16, weight: .bold)
+    let mono18 = UIFont.monospacedSystemFont(ofSize: 18, weight: .bold)
+    let mono22 = UIFont.monospacedSystemFont(ofSize: 22, weight: .heavy)
+    let mono32 = UIFont.monospacedSystemFont(ofSize: 32, weight: .heavy)
+    let mono44 = UIFont.monospacedSystemFont(ofSize: 44, weight: .heavy)
+    let mono48 = UIFont.monospacedSystemFont(ofSize: 48, weight: .heavy)
+    let mono56 = UIFont.monospacedSystemFont(ofSize: 56, weight: .heavy)
+    let iconFont = UIFont.systemFont(ofSize: 18, weight: .semibold)
 
     // MARK: - Scene Lifecycle
     override func didMove(to view: SKView) {
@@ -255,7 +256,7 @@ class GameScene: SKScene {
         activeDanmaku = []
         danmakuSpawnTimer = 0
 
-        showLevelUpPopup(text: Localized.string(zh: "按住屏幕蓄力 · 拖动瞄准 · 松手跳跃", en: "Hold to charge · Drag to aim · Release to jump", ja: "画面長押しでチャージ ・ ドラッグで照準 ・ 指を離してジャンプ"), color: GameConfig.neonGreen)
+        showLevelUpPopup(text: Localized.string(zh: "按住屏幕蓄力 · 拖动瞄准 · 松手跳跃", en: "Hold · Aim · Release", ja: "画面長押しでチャージ ・ ドラッグで照準 ・ 指を離してジャンプ"), color: GameConfig.neonGreen)
     }
     
     func advanceTutorial(to step: Int) {
@@ -299,7 +300,7 @@ class GameScene: SKScene {
         if newLevel > level {
             level = newLevel
             let lvConfig = gameLevels[min(level - 1, gameLevels.count - 1)]
-            showLevelUpPopup(text: Localized.string(zh: "进化！\(lvConfig.desc)", en: "Evolved! \(lvConfig.desc)", ja: "進化！\(lvConfig.desc)"), color: lvConfig.color)
+            showLevelUpPopup(text: Localized.string(zh: "进化！\(lvConfig.desc)", en: "Level Up! \(lvConfig.name)", ja: "進化！\(lvConfig.desc)"), color: lvConfig.color)
             AudioManager.shared.playSound(.perfect)
             AudioManager.shared.vibrate(.success)
 

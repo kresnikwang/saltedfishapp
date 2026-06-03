@@ -542,7 +542,7 @@ extension GameScene {
             screenShakeY = -8
             AudioManager.shared.playSound(.perfect)
             AudioManager.shared.vibrate(.success)
-            showLevelUpPopup(text: Localized.string(zh: "鱼跃龙门！", en: "Leaped the Dragon Gate!"), color: GameConfig.perfectGold)
+            showLevelUpPopup(text: Localized.string(zh: "鱼跃龙门！", en: "Dragon Gate!"), color: GameConfig.perfectGold)
         }
     }
 

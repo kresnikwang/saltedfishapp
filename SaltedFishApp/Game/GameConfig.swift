@@ -74,11 +74,14 @@ struct GameConfig {
 
     // Colors
     static let neonGreen = UIColor(red: 0, green: 1, blue: 136.0/255, alpha: 1)
-    static let bgDark = UIColor(red: 10.0/255, green: 10.0/255, blue: 10.0/255, alpha: 1)
-    static let bgDarkGreen = UIColor(red: 13.0/255, green: 26.0/255, blue: 13.0/255, alpha: 1)
+    static let bgDark = UIColor(red: 8.0/255, green: 12.0/255, blue: 10.0/255, alpha: 1)
+    static let bgDarkGreen = UIColor(red: 13.0/255, green: 30.0/255, blue: 18.0/255, alpha: 1)
+    static let panelFill = UIColor(red: 3.0/255, green: 8.0/255, blue: 6.0/255, alpha: 1)
+    static let textPrimary = UIColor(white: 1.0, alpha: 1.0)
+    static let textSecondary = UIColor(white: 0.86, alpha: 1.0)
     static let goldColor = UIColor(red: 1, green: 170.0/255, blue: 0, alpha: 1)
     static let perfectGold = UIColor(red: 1, green: 238.0/255, blue: 0, alpha: 1)
-    static let errorRed = UIColor(red: 1, green: 68.0/255, blue: 102.0/255, alpha: 1)
+    static let errorRed = UIColor(red: 1, green: 92.0/255, blue: 132.0/255, alpha: 1)
 }
 
 // MARK: - Platform Types
@@ -147,13 +150,13 @@ struct LevelConfig {
 }
 
 let gameLevels: [LevelConfig] = [
-    LevelConfig(nameZh: "咸鱼形态", nameEn: "Unmotivated Intern", nameJa: "サボり初心者", threshold: 0, color: UIColor(hex: "#888888"), jumpBonus: 0, descZh: "LV.01 咸鱼形态", descEn: "LV.01 Unmotivated Intern", descJa: "LV.01 サボり初心者"),
-    LevelConfig(nameZh: "摸鱼学徒", nameEn: "Quiet Quitter", nameJa: "サボり魔", threshold: 1000, color: UIColor(hex: "#aa7700"), jumpBonus: 0.06, descZh: "LV.02 摸鱼学徒", descEn: "LV.02 Quiet Quitter", descJa: "LV.02 サボり魔"),
-    LevelConfig(nameZh: "锦鲤本鲤", nameEn: "Coffee Badger", nameJa: "定時退社プロ", threshold: 2500, color: UIColor(hex: "#ffaa00"), jumpBonus: 0.13, descZh: "LV.03 锦鲤本鲤", descEn: "LV.03 Coffee Badger", descJa: "LV.03 定時退社プロ"),
-    LevelConfig(nameZh: "职场海王", nameEn: "Corporate Survivor", nameJa: "窓際族", threshold: 5000, color: UIColor(hex: "#dd5500"), jumpBonus: 0.21, descZh: "LV.04 职场海王", descEn: "LV.04 Corporate Survivor", descJa: "LV.04 窓際族"),
-    LevelConfig(nameZh: "老油条", nameEn: "Overemployed Guru", nameJa: "ステルス社員", threshold: 10000, color: UIColor(hex: "#ff6600"), jumpBonus: 0.30, descZh: "LV.05 老油条", descEn: "LV.05 Overemployed Guru", descJa: "LV.05 ステルス社員"),
-    LevelConfig(nameZh: "隐形高手", nameEn: "Meeting Dodger", nameJa: "妖精さん", threshold: 20000, color: UIColor(hex: "#cc3366"), jumpBonus: 0.40, descZh: "LV.06 隐形高手", descEn: "LV.06 Meeting Dodger", descJa: "LV.06 妖精さん"),
-    LevelConfig(nameZh: "离职神龙", nameEn: "Resigned Legend", nameJa: "脱出成功龍", threshold: 35000, color: UIColor(hex: "#ff0066"), jumpBonus: 0.52, descZh: "MAX 离职神龙", descEn: "MAX Resigned Legend", descJa: "MAX 脱出成功龍"),
+    LevelConfig(nameZh: "咸鱼形态", nameEn: "Intern", nameJa: "サボり初心者", threshold: 0, color: UIColor(hex: "#d6d6d6"), jumpBonus: 0, descZh: "LV.01 咸鱼形态", descEn: "LV.01 Intern", descJa: "LV.01 サボり初心者"),
+    LevelConfig(nameZh: "摸鱼学徒", nameEn: "Slacker", nameJa: "サボり魔", threshold: 1000, color: UIColor(hex: "#aa7700"), jumpBonus: 0.06, descZh: "LV.02 摸鱼学徒", descEn: "LV.02 Slacker", descJa: "LV.02 サボり魔"),
+    LevelConfig(nameZh: "锦鲤本鲤", nameEn: "Lucky Fish", nameJa: "定時退社プロ", threshold: 2500, color: UIColor(hex: "#ffaa00"), jumpBonus: 0.13, descZh: "LV.03 锦鲤本鲤", descEn: "LV.03 Lucky Fish", descJa: "LV.03 定時退社プロ"),
+    LevelConfig(nameZh: "职场海王", nameEn: "Survivor", nameJa: "窓際族", threshold: 5000, color: UIColor(hex: "#dd5500"), jumpBonus: 0.21, descZh: "LV.04 职场海王", descEn: "LV.04 Survivor", descJa: "LV.04 窓際族"),
+    LevelConfig(nameZh: "老油条", nameEn: "Operator", nameJa: "ステルス社員", threshold: 10000, color: UIColor(hex: "#ff6600"), jumpBonus: 0.30, descZh: "LV.05 老油条", descEn: "LV.05 Operator", descJa: "LV.05 ステルス社員"),
+    LevelConfig(nameZh: "隐形高手", nameEn: "Ghost", nameJa: "妖精さん", threshold: 20000, color: UIColor(hex: "#cc3366"), jumpBonus: 0.40, descZh: "LV.06 隐形高手", descEn: "LV.06 Ghost", descJa: "LV.06 妖精さん"),
+    LevelConfig(nameZh: "离职神龙", nameEn: "Legend", nameJa: "脱出成功龍", threshold: 35000, color: UIColor(hex: "#ff0066"), jumpBonus: 0.52, descZh: "MAX 离职神龙", descEn: "MAX Legend", descJa: "MAX 脱出成功龍"),
 ]
 
 // MARK: - Game Texts
@@ -162,9 +165,9 @@ struct GameTexts {
         switch Localized.currentLanguage {
         case .en:
             return [
-                "Meeting in 5 mins...", "I'll do it tomorrow.", "Just looking busy...",
-                "Quiet quitting today.", "Slack is open, I'm active.", "Is it 5 PM yet?",
-                "Oh no, Boss is typing...", "Did payday hit yet?", "Pretending to care."
+                "Meeting soon...", "Tomorrow.", "Looking busy...",
+                "Quiet quit.", "Still online.", "5 PM yet?",
+                "Boss typing...", "Payday?", "Pretending."
             ]
         case .ja:
             return [
@@ -185,11 +188,11 @@ struct GameTexts {
         switch Localized.currentLanguage {
         case .en:
             return [
-                "Paid to poop", "This meeting could have been an email", "Let's circle back",
-                "Let's touch base", "I don't have the bandwidth", "As per my last email...",
-                "Happy Friday!", "Is it the weekend yet?", "Another useless sync",
-                "Mouse jiggler is on", "Quiet quitting is a lifestyle", "Overemployed & proud",
-                "HR is watching", "Synergy! Innovation! Disruption!", "Let's take this offline"
+                "Paid break", "Could be email", "Circle back",
+                "Touch base", "No bandwidth", "Last email...",
+                "Friday?", "Weekend yet?", "Useless sync",
+                "Jiggler on", "Quiet quit", "Two jobs?",
+                "HR watching", "Synergy!", "Offline?"
             ]
         case .ja:
             return [
@@ -214,14 +217,14 @@ struct GameTexts {
         switch Localized.currentLanguage {
         case .en:
             return [
-                "Back to editing slides...",
-                "Boss: 'Can you hop on a quick Zoom?'",
-                "PIP (Performance Improvement Plan) incoming...",
-                "Slacking failed, back to the grind.",
-                "Client: 'We need to pivot.'",
-                "Out of office. Forever.",
-                "Layoffs are coming...",
-                "My mouse jiggler unplugged.",
+                "Back to slides...",
+                "Quick Zoom?",
+                "PIP incoming...",
+                "Back to work.",
+                "Client pivoted.",
+                "OOO forever.",
+                "Layoffs...",
+                "Jiggler unplugged.",
                 "Promoted to customer."
             ]
         case .ja:
@@ -362,11 +365,11 @@ class GamePersistence {
             return list
         }
         let defaultList = [
-            LeaderboardEntry(name: Localized.string(zh: "摸鱼王老板", en: "CEO Boss", ja: "サボり社長"), score: 8000, date: ""),
-            LeaderboardEntry(name: Localized.string(zh: "主管阿强", en: "Manager Qiang", ja: "マネージャー強"), score: 5000, date: ""),
-            LeaderboardEntry(name: Localized.string(zh: "程序员阿飞", en: "Dev Fei", ja: "エンジニア飛"), score: 3200, date: ""),
-            LeaderboardEntry(name: Localized.string(zh: "设计小美", en: "Designer Mei", ja: "デザイナー美"), score: 1800, date: ""),
-            LeaderboardEntry(name: Localized.string(zh: "实习生小明", en: "Intern Ming", ja: "インターン明"), score: 600, date: "")
+            LeaderboardEntry(name: Localized.string(zh: "摸鱼王老板", en: "CEO", ja: "サボり社長"), score: 8000, date: ""),
+            LeaderboardEntry(name: Localized.string(zh: "主管阿强", en: "Manager", ja: "マネージャー強"), score: 5000, date: ""),
+            LeaderboardEntry(name: Localized.string(zh: "程序员阿飞", en: "Dev", ja: "エンジニア飛"), score: 3200, date: ""),
+            LeaderboardEntry(name: Localized.string(zh: "设计小美", en: "Designer", ja: "デザイナー美"), score: 1800, date: ""),
+            LeaderboardEntry(name: Localized.string(zh: "实习生小明", en: "Intern", ja: "インターン明"), score: 600, date: "")
         ]
         saveLocalLeaderboard(defaultList)
         return defaultList
@@ -446,30 +449,62 @@ class GamePersistence {
 class GameCenterManager: NSObject, GKGameCenterControllerDelegate {
     static let shared = GameCenterManager()
     
-    // Default leaderboard ID configured in App Store Connect
-    private let leaderboardID = "sf_leaderboard_global"
+    // This must exactly match the Leaderboard ID configured in App Store Connect.
+    private let leaderboardID = "tinybuff.global"
     
     var isEnabled = false
-    
-    func authenticateLocalPlayer(presentingVC: UIViewController? = nil) {
+    private var pendingScore: Int?
+    private var pendingLeaderboardPresentation = false
+
+    func authenticateLocalPlayer(presentingVC: UIViewController? = nil, completion: ((Bool) -> Void)? = nil) {
         let localPlayer = GKLocalPlayer.local
-        localPlayer.authenticateHandler = { vc, error in
-            if let targetVC = vc {
-                let topVC = presentingVC ?? self.getRootViewController()
-                topVC?.present(targetVC, animated: true)
-            } else if localPlayer.isAuthenticated {
-                self.isEnabled = true
-                print("Game Center: Authenticated - \(localPlayer.displayName)")
-            } else {
-                self.isEnabled = false
-                print("Game Center: Disabled - \(error?.localizedDescription ?? "No error")")
+        localPlayer.authenticateHandler = { [weak self] vc, error in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                if let targetVC = vc {
+                    let topVC = presentingVC ?? self.getTopViewController()
+                    topVC?.present(targetVC, animated: true)
+                    return
+                }
+
+                self.isEnabled = localPlayer.isAuthenticated
+                if self.isEnabled {
+                    print("Game Center: Authenticated - \(localPlayer.displayName)")
+                    self.flushPendingScore()
+                    if self.pendingLeaderboardPresentation {
+                        self.pendingLeaderboardPresentation = false
+                        self.showLeaderboard(presentingVC: presentingVC)
+                    }
+                } else {
+                    self.pendingLeaderboardPresentation = false
+                    print("Game Center: Disabled - \(error?.localizedDescription ?? "No error")")
+                }
+
+                completion?(self.isEnabled)
             }
         }
     }
-    
-    func submitScore(_ score: Int) {
-        guard isEnabled && GKLocalPlayer.local.isAuthenticated else { return }
-        
+
+    func submitScore(_ score: Int, presentingVC: UIViewController? = nil) {
+        guard score > 0 else { return }
+
+        guard isEnabled && GKLocalPlayer.local.isAuthenticated else {
+            pendingScore = max(pendingScore ?? 0, score)
+            authenticateLocalPlayer(presentingVC: presentingVC)
+            return
+        }
+
+        submitAuthenticatedScore(score)
+    }
+
+    private func flushPendingScore() {
+        guard let score = pendingScore else { return }
+        pendingScore = nil
+        submitAuthenticatedScore(score)
+    }
+
+    private func submitAuthenticatedScore(_ score: Int) {
         GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [leaderboardID]) { error in
             if let error = error {
                 print("Game Center: Failed to submit score: \(error.localizedDescription)")
@@ -478,27 +513,42 @@ class GameCenterManager: NSObject, GKGameCenterControllerDelegate {
             }
         }
     }
-    
-    func showLeaderboard(presentingVC: UIViewController? = nil) {
-        guard isEnabled && GKLocalPlayer.local.isAuthenticated else { return }
-        
-        let topVC = presentingVC ?? getRootViewController()
+
+    func showLeaderboard(presentingVC: UIViewController? = nil, fallback: (() -> Void)? = nil) {
+        guard isEnabled && GKLocalPlayer.local.isAuthenticated else {
+            pendingLeaderboardPresentation = true
+            authenticateLocalPlayer(presentingVC: presentingVC) { [weak self] success in
+                if !success {
+                    self?.pendingLeaderboardPresentation = false
+                    fallback?()
+                }
+            }
+            return
+        }
+
+        let topVC = presentingVC ?? getTopViewController()
         guard let vc = topVC else { return }
-        
+
         let gcVC = GKGameCenterViewController(state: .leaderboards)
         gcVC.gameCenterDelegate = self
-        gcVC.leaderboardIdentifier = leaderboardID
         vc.present(gcVC, animated: true, completion: nil)
     }
-    
+
     func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismiss(animated: true, completion: nil)
     }
-    
-    private func getRootViewController() -> UIViewController? {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            return windowScene.windows.first?.rootViewController
+
+    private func getTopViewController() -> UIViewController? {
+        let rootVC = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?
+            .rootViewController
+
+        var topVC = rootVC
+        while let presentedVC = topVC?.presentedViewController {
+            topVC = presentedVC
         }
-        return nil
+        return topVC
     }
 }

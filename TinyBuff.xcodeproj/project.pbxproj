@@ -24,6 +24,7 @@
 		08C536E9828142EE8C2BEBB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4C3C43FCDFEC4B07A805698A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		548B6B3016C945A2853850AD /* SaltedFishAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaltedFishAppApp.swift; sourceTree = "<group>"; };
+		5B71E98A0F3A4C7A96C2B412 /* TinyBuff.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TinyBuff.entitlements; sourceTree = "<group>"; };
 		613C1B9CB5974D0F87FEC739 /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
 		6EFE788E85864C88850B8F8A /* GameScene+Touch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameScene+Touch.swift"; sourceTree = "<group>"; };
 		82654AC305D54A1B95B0670C /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -63,6 +64,7 @@
 				ADD6AB0D413140569D750E99 /* Game */,
 				4C3C43FCDFEC4B07A805698A /* Assets.xcassets */,
 				08C536E9828142EE8C2BEBB4 /* Info.plist */,
+				5B71E98A0F3A4C7A96C2B412 /* TinyBuff.entitlements */,
 			);
 			path = SaltedFishApp;
 			sourceTree = "<group>";
@@ -119,8 +121,17 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					F9F0F57823CC465192FEECA5 = {
+						SystemCapabilities = {
+							com.apple.GameCenter = {
+								enabled = 1;
+							};
+						};
+					};
+				};
 			};
-			buildConfigurationList = 113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "SaltedFishApp" */;
+			buildConfigurationList = 113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "TinyBuff" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -176,12 +187,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = SaltedFishApp/TinyBuff.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7A8J9474XS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SaltedFishApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "鱼来运转";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tiny Buff";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.action-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
@@ -192,8 +206,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kresnikwang.saltedfish;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kresnikwang.TinyBuff;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -262,12 +280,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = SaltedFishApp/TinyBuff.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7A8J9474XS;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SaltedFishApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "鱼来运转";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tiny Buff";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.action-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
@@ -278,8 +299,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kresnikwang.saltedfish;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kresnikwang.TinyBuff;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -339,7 +364,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "SaltedFishApp" */ = {
+		113ADA9F4E074F91AAAF8BE7 /* Build configuration list for PBXProject "TinyBuff" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				5CD34C5B0B0A408B95BAD3A9 /* Debug */,

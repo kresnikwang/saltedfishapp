@@ -150,11 +150,7 @@ extension GameScene {
         if x >= startX + btnW + gapX && x <= startX + btnW * 2 + gapX &&
            y >= startY && y <= startY + btnH {
             registerButtonFeedback(x: x, y: y)
-            if !GameCenterManager.shared.isEnabled {
-                GameCenterManager.shared.authenticateLocalPlayer()
-            } else {
-                GameCenterManager.shared.submitScore(score)
-            }
+            GameCenterManager.shared.submitScore(score)
             return
         }
         // Leaderboard
@@ -175,8 +171,8 @@ extension GameScene {
 
     func shareScore() {
         let text = Localized.string(
-            zh: "我在「鱼来运转」中获得了 \(score) 分！\(gameLevels[min(level-1, gameLevels.count-1)].desc)",
-            en: "I scored \(score) points in Slacker Fish! Level: \(gameLevels[min(level-1, gameLevels.count-1)].desc)"
+            zh: "我在 Tiny Buff 中获得了 \(score) 分！\(gameLevels[min(level-1, gameLevels.count-1)].desc)",
+            en: "Tiny Buff: \(score) pts · \(gameLevels[min(level-1, gameLevels.count-1)].name)"
         )
         let activityVC = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -186,10 +182,8 @@ extension GameScene {
     }
  
     func showLeaderboard() {
-        if GameCenterManager.shared.isEnabled {
-            GameCenterManager.shared.showLeaderboard()
-        } else {
-            gameStateVal = .leaderboard
-        }
+        GameCenterManager.shared.showLeaderboard(fallback: {
+            self.gameStateVal = .leaderboard
+        })
     }
 }
