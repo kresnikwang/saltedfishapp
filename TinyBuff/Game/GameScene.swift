@@ -271,6 +271,26 @@ class GameScene: SKScene {
         GamePersistence.shared.hasSeenTutorial = true
     }
 
+    func prepareForAppPause() {
+        isTouching = false
+        lastUpdateTime = 0
+        AudioManager.shared.stopChargeSound()
+
+        guard gameStateVal == .charging else { return }
+        gameStateVal = .playing
+        isCharging = false
+        chargePower = 0
+        chargeProgress = 0
+        chargeReadyFeedbackPlayed = false
+        fishSquishX = 1
+        fishSquishY = 1
+        timeScale = 1.0
+    }
+
+    func resumeAfterAppPause() {
+        lastUpdateTime = 0
+    }
+
     func triggerGameOver() {
         gameStateVal = .gameover
         AudioManager.shared.stopChargeSound()

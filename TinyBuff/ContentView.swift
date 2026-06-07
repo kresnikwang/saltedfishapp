@@ -3,12 +3,13 @@ import SpriteKit
 
 struct ContentView: View {
     @StateObject private var gameManager = GameManager.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
             // SpriteKit Game View
             SpriteView(scene: gameManager.gameScene, transition: nil,
-                       isPaused: false, preferredFramesPerSecond: 60)
+                       isPaused: gameManager.isScenePaused, preferredFramesPerSecond: 60)
                 .ignoresSafeArea()
 
             // Calculator overlay
@@ -18,6 +19,9 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: gameManager.showCalculator)
+        .onChange(of: scenePhase) { phase in
+            gameManager.setScenePaused(phase != .active)
+        }
     }
 }
 
@@ -25,6 +29,7 @@ class GameManager: ObservableObject {
     static let shared = GameManager()
 
     @Published var showCalculator = false
+    @Published var isScenePaused = false
 
     lazy var gameScene: GameScene = {
         let scene = GameScene(size: UIScreen.main.bounds.size)
@@ -34,4 +39,18 @@ class GameManager: ObservableObject {
     }()
 
     private init() {}
+
+    func setScenePaused(_ paused: Bool) {
+        guard isScenePaused != paused else { return }
+        isScenePaused = paused
+        gameScene.isPaused = paused
+
+        if paused {
+            gameScene.prepareForAppPause()
+            AudioManager.shared.suspend()
+        } else {
+            gameScene.resumeAfterAppPause()
+            AudioManager.shared.resume()
+        }
+    }
 }

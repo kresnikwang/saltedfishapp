@@ -45,6 +45,30 @@ class AudioManager {
         }
     }
 
+    func suspend() {
+        stopChargeSound()
+        audioEngine?.pause()
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
+        } catch {
+            print("Audio session suspend failed: \(error)")
+        }
+    }
+
+    func resume() {
+        setupAudioSession()
+        guard let engine = audioEngine else {
+            setupEngine()
+            return
+        }
+        guard !engine.isRunning else { return }
+        do {
+            try engine.start()
+        } catch {
+            print("Audio engine resume failed: \(error)")
+        }
+    }
+
     // MARK: - Sound Effects using AudioToolbox for simplicity
     func playSound(_ type: SoundType) {
         guard !isMuted else { return }
